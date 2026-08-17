@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="description" content="音你而创 MusiYou - 录一句话，用你的音色唱整首歌。不用懂乐理，凭感觉创作。">
-  <meta name="keywords" content="音乐创作,写歌,音色克隆,AI唱歌,音乐制作">
   <meta property="og:title" content="音你而创 · MusiYou">
   <meta property="og:description" content="录一句话，用你的音色唱整首歌">
   <title>音你而创 · MusiYou</title>
@@ -88,9 +87,9 @@
       overflow-x: auto; overflow-y: hidden; border-radius: 8px;
       border: 1px solid var(--panel-border); max-width: 100%;
       -webkit-overflow-scrolling: touch; touch-action: pan-x;
+      scroll-behavior: smooth;
     }
     canvas#editor { background: rgba(255,255,255,0.03); cursor: crosshair; display: block; touch-action: none; }
-    canvas#coverCanvas { display: none; }
     .controls { display: flex; align-items: center; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
     .controls label { font-size: 10px; color: var(--text2); white-space: nowrap; }
     .controls select {
@@ -100,11 +99,6 @@
     }
     .controls select option { background: #1a1a2e; }
     .controls input[type="range"] { width: 60px; accent-color: var(--accent); min-height: 28px; }
-    .controls input[type="text"] {
-      padding: 5px 8px; border-radius: 6px; border: 1px solid var(--panel-border);
-      font-size: 11px; background: rgba(255,255,255,0.08); color: var(--text);
-      width: 90px; outline: none;
-    }
     .dropdown-multi { position: relative; display: inline-block; }
     .dropdown-trigger {
       display: flex; align-items: center; gap: 4px; padding: 6px 10px;
@@ -147,9 +141,11 @@
     .lyrics-preview {
       margin-top: 6px; background: rgba(255,255,255,0.03);
       border: 1px solid var(--panel-border); border-radius: 6px;
-      padding: 6px; max-height: 100px; overflow-y: auto;
+      padding: 6px; max-height: 140px; overflow-y: auto;
     }
-    .sentence-item { display: flex; align-items: center; margin-bottom: 3px; }
+    .sentence-item { display: flex; align-items: center; margin-bottom: 3px; cursor: pointer; border-radius: 4px; padding: 2px; transition: background 0.15s; }
+    .sentence-item:hover { background: rgba(139,92,246,0.15); }
+    .sentence-item.active { background: rgba(139,92,246,0.25); }
     .sentence-btn {
       background: var(--accent); color: white; border: none; padding: 3px 8px;
       border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 5px;
@@ -158,7 +154,12 @@
     .sentence-text { font-size: 11px; display: flex; flex-wrap: wrap; }
     .sentence-text span { padding: 1px; border-radius: 2px; transition: all 0.2s; }
     .sentence-text span.highlight { background: var(--highlight); color: #000; font-weight: 600; }
-    .sentence-text span.section-mark { border-left: 2px solid #f59e0b; padding-left: 4px; }
+    .auto-section-badge {
+      display: inline-block; font-size: 8px; padding: 1px 4px;
+      border-radius: 8px; margin-left: 4px;
+    }
+    .auto-section-verse { background: rgba(59,130,246,0.3); color: #93c5fd; }
+    .auto-section-chorus { background: rgba(245,158,11,0.3); color: #fbbf24; }
     .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px; margin-top: 6px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b); border-radius: 2px; width: 0%; transition: width 0.08s linear; }
     .loading-overlay {
@@ -209,9 +210,8 @@
       .controls { gap: 2px; }
       .controls select { font-size: 10px; padding: 4px 6px; min-height: 30px; max-width: 90px; }
       .controls input[type="range"] { width: 50px; }
-      .controls input[type="text"] { width: 70px; font-size: 10px; }
       .panel { padding: 6px 8px; margin: 3px 4px; }
-      .lyrics-preview { max-height: 80px; }
+      .lyrics-preview { max-height: 100px; }
       .fullscreen-lyrics { font-size: 16px; }
       .dropdown-trigger { font-size: 10px; padding: 5px 8px; min-height: 30px; }
       .dropdown-panel { min-width: 130px; max-height: 160px; }
@@ -233,7 +233,7 @@
         <textarea id="lyrics" placeholder="输入歌词，标点分隔句子。&#10;例如：今天的风很轻，吹过我的窗前"></textarea>
         <button id="applyLyrics">✨ 应用歌词</button>
         <p id="info"></p>
-        <h2 style="margin-top:6px;">📝 歌词预览</h2>
+        <h2 style="margin-top:6px;">📝 歌词预览 <span class="badge">点歌词定位音符</span></h2>
         <div class="lyrics-preview" id="lyricsPreview"></div>
         <h2 style="margin-top:6px;">📋 旋律模板</h2>
         <div class="controls">
@@ -242,15 +242,10 @@
           <button class="small" data-template="rock">摇滚</button>
           <button class="small" data-template="chinese">古风</button>
         </div>
-        <h2 style="margin-top:6px;">🏷 段落标记</h2>
-        <div class="controls">
-          <input type="text" id="sectionLabel" placeholder="如：副歌" style="width:70px;">
-          <button class="small gray" id="addSectionBtn">插入标记</button>
-        </div>
       </div>
       <div class="right">
         <h2>2. 调旋律 <span class="badge">画布可滑动</span></h2>
-        <div class="canvas-scroll"><canvas id="editor" height="280"></canvas></div>
+        <div class="canvas-scroll" id="canvasScroll"><canvas id="editor" height="280"></canvas></div>
         <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
         <div class="controls">
           <button id="playBtn">▶ 播放</button>
@@ -275,14 +270,13 @@
         <button class="green" id="startRecordBtn">🎤 录一句话</button>
         <button id="stopRecordBtn" disabled>⏹ 停止</button>
         <button class="orange" id="playRecordBtn" disabled>▶ 试听克隆音色</button>
-        <button class="gray small" id="playOriginalBtn" disabled>▶ 原始录音</button>
         <span id="recordStatus" style="font-size:10px;color:var(--text2);">未录音</span>
       </div>
       <p style="font-size:9px;color:var(--text2);margin-top:3px;">💡 请用自然语气说："你好，这是我的声音"。音色会保存，下次自动使用。</p>
     </div>
 
     <div class="panel panel-style">
-      <h2>4. 选风格</h2>
+      <h2>4. 选风格 <span class="badge">和弦/编曲自动完成</span></h2>
       <div class="controls">
         <label>风格：</label>
         <select id="accompStyle">
@@ -302,11 +296,6 @@
         <input type="range" id="accompVolume" min="0" max="1" step="0.05" value="0.3">
         <span id="accompVolumeValue">0.3</span>
       </div>
-      <div class="controls" style="margin-top:4px;">
-        <label>自定义和弦：</label>
-        <input type="text" id="customChords" placeholder="如：C,Am,F,G" style="width:100px;">
-        <span style="font-size:9px;color:var(--text2);">（留空自动分析）</span>
-      </div>
     </div>
 
     <div class="panel panel-share">
@@ -319,7 +308,6 @@
     </div>
   </div>
 
-  <canvas id="coverCanvas" width="600" height="600"></canvas>
   <div class="loading-overlay" id="loadingOverlay">
     <div class="wave-animation"><span></span><span></span><span></span><span></span><span></span></div>
     <div class="loading-text" id="loadingText">处理中...</div>
@@ -381,7 +369,6 @@
     let notes = [];
     let lyricsChars = [];
     let sentences = [];
-    let sectionMarkers = [];
     let selectedNoteIndex = -1;
     let isDragging = false;
     let isResizing = false;
@@ -393,14 +380,15 @@
     let mediaRecorder = null;
     let recordedChunks = [];
     let voiceProfile = null;
-    let originalRecording = null;
     let autoChords = [];
     let activeSources = [];
     let selectedAccompInstruments = ['guitar'];
     let dropdownOpen = false;
+    let activeSentenceIndex = -1;
 
     const canvas = document.getElementById('editor');
     const ctx = canvas.getContext('2d');
+    const canvasScroll = document.getElementById('canvasScroll');
     const NOTE_H = 20;
     const NOTE_GAP = 2;
     const DUR_PX = 55;
@@ -475,6 +463,14 @@
       return -1;
     }
 
+    // 滚动画布到指定音符
+    function scrollToNote(index) {
+      if (index < 0 || index >= notes.length) return;
+      const x = noteX(index);
+      const scrollLeft = x - canvasScroll.clientWidth / 2;
+      canvasScroll.scrollTo({ left: Math.max(0, scrollLeft), behavior: 'smooth' });
+    }
+
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = '#0f0a1e';
@@ -492,22 +488,22 @@
       ctx.fillStyle = 'rgba(148,163,184,0.5)';
       ctx.textAlign = 'left';
       ctx.fillText('时间 →', LEFT_PAD, canvas.height-2);
-      // 段落标记
-      sectionMarkers.forEach(marker => {
-        if (marker.index >= 0 && marker.index < notes.length) {
-          const x = noteX(marker.index);
-          ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]);
-          ctx.beginPath(); ctx.moveTo(x, TOP_PAD-6); ctx.lineTo(x, canvas.height-BOT_PAD+4); ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = '#f59e0b'; ctx.font = '8px sans-serif'; ctx.textAlign = 'left';
-          ctx.fillText(marker.label, x+3, TOP_PAD-2);
-        }
-      });
+
+      // 自动段落标记（主歌/副歌）
+      const sentenceRanges = sentences.map(s => ({ start: s.startIndex, end: s.endIndex }));
+      const chorusStart = detectChorusStart(notes, sentenceRanges);
+
       notes.forEach((note, i) => {
         const x = noteX(i), y = midiToY(note.midi), w = note.duration * DUR_PX;
         let color = `hsl(${((note.midi-SCALE[0])/(SCALE[SCALE.length-1]-SCALE[0]))*260}, 70%, 60%)`;
         if (i === currentPlayingIndex) color = '#fbbf24';
         else if (i === selectedNoteIndex) color = '#93c5fd';
+
+        // 副歌区域用暖色调
+        if (chorusStart >= 0 && i >= chorusStart) {
+          color = `hsl(35, 85%, 62%)`;
+        }
+
         ctx.fillStyle = color;
         ctx.shadowBlur = 2; ctx.shadowColor = color;
         ctx.fillRect(x, y-NOTE_H/2, w, NOTE_H);
@@ -524,8 +520,45 @@
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
         ctx.fillRect(x+w-3, y-NOTE_H/2, 3, NOTE_H);
       });
+
+      // 副歌分割线
+      if (chorusStart >= 0) {
+        const x = noteX(chorusStart);
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4,4]);
+        ctx.beginPath(); ctx.moveTo(x, TOP_PAD-6); ctx.lineTo(x, canvas.height-BOT_PAD+4); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = '8px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('副歌', x+3, TOP_PAD-2);
+      }
+
       document.getElementById('status').textContent = `音符：${notes.length}`;
       document.getElementById('undoBtn').disabled = undoStack.length === 0;
+    }
+
+    // 自动检测副歌：找到旋律重复度最高的段落
+    function detectChorusStart(notesArray, sentenceRanges) {
+      if (sentenceRanges.length < 3) return -1;
+      // 简单策略：找音高最高的句子，作为副歌起点
+      let highestAvgMidi = -1;
+      let highestIdx = -1;
+      sentenceRanges.forEach((s, idx) => {
+        if (s.end < s.start) return;
+        let sum = 0;
+        for (let i = s.start; i <= s.end; i++) sum += notesArray[i].midi;
+        const avg = sum / (s.end - s.start + 1);
+        if (avg > highestAvgMidi) {
+          highestAvgMidi = avg;
+          highestIdx = idx;
+        }
+      });
+      if (highestIdx > 0) {
+        return sentenceRanges[highestIdx].start;
+      }
+      return -1;
     }
 
     function analyzeChords(notesArray, beatsPerBar = 4) {
@@ -554,14 +587,6 @@
         if (score > bestScore) { bestScore = score; best = chordName; }
       }
       return best;
-    }
-    function getChords() {
-      const custom = document.getElementById('customChords').value.trim();
-      if (custom) {
-        const parsed = custom.split(',').map(c => c.trim()).filter(c => CHORD_MAP[c]);
-        if (parsed.length > 0) return parsed;
-      }
-      return analyzeChords(notes);
     }
 
     // FFT
@@ -906,7 +931,7 @@
       const styleName = document.getElementById('accompStyle').value;
       const accompVol = parseFloat(document.getElementById('accompVolume').value);
       const styleCfg = STYLE_CONFIG[styleName];
-      autoChords = getChords();
+      autoChords = analyzeChords(notes);
 
       let timeOffset = 0;
       notes.forEach((note) => {
@@ -1011,13 +1036,40 @@
         c.innerHTML = '<p style="font-size:10px;color:rgba(148,163,184,0.6);">应用歌词后显示每句。</p>';
         return;
       }
+      // 自动检测副歌起点
+      const sentenceRanges = sentences.map(s => ({ start: s.startIndex, end: s.endIndex }));
+      const chorusStart = detectChorusStart(notes, sentenceRanges);
+      let chorusSentenceIdx = -1;
+      if (chorusStart >= 0) {
+        chorusSentenceIdx = sentenceRanges.findIndex(r => r.start === chorusStart);
+      }
+
       let html = '';
       sentences.forEach((s, idx) => {
-        html += `<div class="sentence-item"><button class="sentence-btn" data-idx="${idx}">▶</button><span class="sentence-text">${s.text.split('').map((ch, i) => `<span data-idx="${s.startIndex + i}">${ch}</span>`).join('')}</span></div>`;
+        const isChorus = chorusSentenceIdx >= 0 && idx >= chorusSentenceIdx;
+        const sectionLabel = isChorus ? '<span class="auto-section-badge auto-section-chorus">副歌</span>' : '<span class="auto-section-badge auto-section-verse">主歌</span>';
+        html += `<div class="sentence-item" data-idx="${idx}">
+          <button class="sentence-btn" data-idx="${idx}">▶</button>
+          <span class="sentence-text">${s.text.split('').map((ch, i) => `<span data-idx="${s.startIndex + i}">${ch}</span>`).join('')}${sectionLabel}</span>
+        </div>`;
       });
       c.innerHTML = html;
-      c.querySelectorAll('.sentence-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+
+      // 点击句子：高亮 + 滚动画布到该句第一个音符
+      c.querySelectorAll('.sentence-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const idx = parseInt(item.dataset.idx);
+          const sentence = sentences[idx];
+          if (sentence) {
+            selectedNoteIndex = sentence.startIndex;
+            scrollToNote(sentence.startIndex);
+            draw();
+          }
+        });
+        // 句前播放按钮
+        const btn = item.querySelector('.sentence-btn');
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           const idx = parseInt(btn.dataset.idx);
           playNotesRange(sentences[idx].startIndex, sentences[idx].endIndex);
         });
@@ -1050,33 +1102,24 @@
             const arrayBuf = await blob.arrayBuffer();
             const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
             const chData = audioBuf.getChannelData(0);
-            // 录音质量检测
             if (audioBuf.duration < 1.0) {
-              hideLoading();
-              showToast('录音太短，请说完整的一句话');
-              stream.getTracks().forEach(t => t.stop());
-              return;
+              hideLoading(); showToast('录音太短，请说完整的一句话');
+              stream.getTracks().forEach(t => t.stop()); return;
             }
             let maxAmp = 0;
             for (let i = 0; i < chData.length; i++) maxAmp = Math.max(maxAmp, Math.abs(chData[i]));
             if (maxAmp < 0.05) {
-              hideLoading();
-              showToast('录音太安静，请靠近麦克风');
-              stream.getTracks().forEach(t => t.stop());
-              return;
+              hideLoading(); showToast('录音太安静，请靠近麦克风');
+              stream.getTracks().forEach(t => t.stop()); return;
             }
             if (maxAmp > 0.98) {
-              hideLoading();
-              showToast('录音有削波，请离麦克风远一点');
-              stream.getTracks().forEach(t => t.stop());
-              return;
+              hideLoading(); showToast('录音有削波，请离麦克风远一点');
+              stream.getTracks().forEach(t => t.stop()); return;
             }
             voiceProfile = extractVoiceProfile(chData, audioCtx.sampleRate);
-            originalRecording = audioBuf;
             localStorage.setItem('musiyou_voice', JSON.stringify(voiceProfile));
             document.getElementById('recordStatus').textContent = '✅ 音色提取成功！';
             document.getElementById('playRecordBtn').disabled = false;
-            document.getElementById('playOriginalBtn').disabled = false;
             showToast('音色提取成功！');
             stream.getTracks().forEach(t => t.stop());
           } catch (err) {
@@ -1090,7 +1133,6 @@
         document.getElementById('startRecordBtn').disabled = true;
         document.getElementById('stopRecordBtn').disabled = false;
         document.getElementById('playRecordBtn').disabled = true;
-        document.getElementById('playOriginalBtn').disabled = true;
         document.getElementById('recordStatus').textContent = '录音中...请说一句话';
       } catch (err) {
         showToast('无法访问麦克风，请允许权限');
@@ -1114,14 +1156,6 @@
         if (vocal) vocal.connect(audioCtx.destination);
         timeOffset += 0.5;
       });
-    });
-    document.getElementById('playOriginalBtn').addEventListener('click', async () => {
-      if (!originalRecording) return;
-      await ensureAudioCtx();
-      const src = audioCtx.createBufferSource();
-      src.buffer = originalRecording;
-      src.connect(audioCtx.destination);
-      src.start();
     });
 
     // 下拉多选
@@ -1162,19 +1196,6 @@
         dropdownOpen = false;
         accompTrigger.classList.remove('open');
         accompPanel.classList.remove('open');
-      }
-    });
-
-    // 段落标记
-    document.getElementById('addSectionBtn').addEventListener('click', () => {
-      const label = document.getElementById('sectionLabel').value.trim() || '段落';
-      const idx = selectedNoteIndex >= 0 ? selectedNoteIndex : (notes.length > 0 ? notes.length - 1 : -1);
-      if (idx >= 0) {
-        sectionMarkers.push({ index: idx, label });
-        draw();
-        showToast('段落标记已添加');
-      } else {
-        showToast('请先创建音符');
       }
     });
 
@@ -1284,7 +1305,7 @@
       renderLyricsPreview();
       resizeCanvas();
       draw();
-      // 押韵检测
+      // 押韵提示
       const endings = rawSentences.map(s => { const c = s.replace(/\s+/g, ''); return c.charAt(c.length-1); });
       let rhymeInfo = '';
       const seen = {};
@@ -1375,7 +1396,7 @@
     document.getElementById('shareBtn').addEventListener('click', () => {
       const data = {
         lyrics: document.getElementById('lyrics').value,
-        notes, lyricsChars, sectionMarkers,
+        notes, lyricsChars,
         melodyInstrument: document.getElementById('melodyInstrument').value,
         accompInstruments: selectedAccompInstruments,
         accompStyle: document.getElementById('accompStyle').value,
@@ -1405,7 +1426,6 @@
         document.getElementById('lyrics').value = data.lyrics || '';
         notes = data.notes || [];
         lyricsChars = data.lyricsChars || [];
-        sectionMarkers = data.sectionMarkers || [];
         if (data.melodyInstrument) document.getElementById('melodyInstrument').value = data.melodyInstrument;
         if (data.accompInstruments) { selectedAccompInstruments = data.accompInstruments; renderDropdownOptions(); }
         if (data.accompStyle) document.getElementById('accompStyle').value = data.accompStyle;
@@ -1437,7 +1457,7 @@
     function saveDraft() {
       const draft = {
         lyrics: document.getElementById('lyrics').value,
-        notes, lyricsChars, sectionMarkers,
+        notes, lyricsChars,
         melodyInstrument: document.getElementById('melodyInstrument').value,
         accompInstruments: selectedAccompInstruments,
         accompStyle: document.getElementById('accompStyle').value,
@@ -1454,7 +1474,6 @@
         const data = JSON.parse(draft);
         if (data.lyrics) document.getElementById('lyrics').value = data.lyrics;
         if (data.notes) { notes = data.notes; lyricsChars = data.lyricsChars || []; }
-        if (data.sectionMarkers) sectionMarkers = data.sectionMarkers;
         if (data.melodyInstrument) document.getElementById('melodyInstrument').value = data.melodyInstrument;
         if (data.accompInstruments) { selectedAccompInstruments = data.accompInstruments; renderDropdownOptions(); }
         if (data.accompStyle) document.getElementById('accompStyle').value = data.accompStyle;
