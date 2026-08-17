@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🎵 我的音乐创作</title>
+  <style>
+    /* ============ 音乐主题背景 ============ */
+    :root {
+      --accent: #8b5cf6;
+      --accent2: #ec4899;
+      --accent3: #f59e0b;
+      --glass-bg: rgba(255,255,255,0.06);
+      --glass-border: rgba(255,255,255,0.12);
+      --text: #f1f5f9;
+      --text2: #94a3b8;
+      --highlight: #fbbf24;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      color: var(--text);
+      background: #0f0a1e;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* 动态渐变背景 */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 15% 20%, rgba(139,92,246,0.25) 0%, transparent 50%),
+        radial-gradient(ellipse at 85% 15%, rgba(236,72,153,0.2) 0%, transparent 45%),
+        radial-gradient(ellipse at 50% 80%, rgba(59,130,246,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 75% 65%, rgba(245,158,11,0.1) 0%, transparent 40%),
+        #0f0a1e;
+      z-index: -3;
+      animation: bgShift 20s ease-in-out infinite alternate;
+    }
+    @keyframes bgShift {
+      0% { filter: hue-rotate(0deg); }
+      50% { filter: hue-rotate(15deg); }
+      100% { filter: hue-rotate(0deg); }
+    }
+
+    /* 浮动音符装饰 */
+    .floating-note {
+      position: fixed;
+      font-size: 24px;
+      opacity: 0.15;
+      animation: floatNote 15s linear infinite;
+      z-index: -1;
+      pointer-events: none;
+      user-select: none;
+    }
+    @keyframes floatNote {
+      0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.18; }
+      90% { opacity: 0.18; }
+      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* ============ 容器 ============ */
+    .container {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+      max-width: 1100px;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(236,72,153,0.25));
+      border-bottom: 1px solid var(--glass-border);
+      color: white;
+      padding: 24px 30px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      animation: headerShine 4s ease-in-out infinite;
+    }
+    @keyframes headerShine {
+      0%, 100% { transform: translateX(-100%); }
+      50% { transform: translateX(100%); }
+    }
+    header h1 {
+      font-size: 28px;
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+      position: relative;
+      z-index: 1;
+    }
+    header h1 .music-icon {
+      display: inline-block;
+      animation: bounce 2s ease-in-out infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    header p {
+      font-size: 13px;
+      opacity: 0.8;
+      position: relative;
+      z-index: 1;
+    }
+
+    .main {
+      display: flex;
+      gap: 20px;
+      padding: 20px;
+      flex-wrap: wrap;
+    }
+    .left { flex: 1; min-width: 250px; }
+    .right { flex: 2; min-width: 480px; }
+
+    h2 {
+      font-size: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text);
+    }
+    .badge {
+      font-size: 10px;
+      background: rgba(74,222,128,0.15);
+      color: #4ade80;
+      padding: 2px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(74,222,128,0.3);
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      padding: 14px;
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      font-size: 15px;
+      resize: vertical;
+      outline: none;
+      font-family: inherit;
+      transition: border 0.2s, box-shadow 0.2s;
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+    }
+    textarea::placeholder { color: rgba(148,163,184,0.5); }
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.2);
+    }
+
+    button {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white;
+      border: none;
+      padding: 9px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 2px;
+      font-family: inherit;
+      touch-action: manipulation;
+      position: relative;
+      overflow: hidden;
+    }
+    button::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.4s;
+    }
+    button:hover::after { transform: translateX(100%); }
+    button:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(139,92,246,0.4); }
+    button:active { transform: scale(0.97); }
+    button:disabled { background: #3a3a4a; cursor: not-allowed; box-shadow: none; }
+    button:disabled::after { display: none; }
+    button.small { padding: 5px 10px; font-size: 11px; border-radius: 6px; }
+    button.gray { background: rgba(100,116,139,0.6); }
+    button.gray:hover { box-shadow: 0 4px 12px rgba(100,116,139,0.4); }
+    button.big {
+      font-size: 16px;
+      padding: 14px 28px;
+      font-weight: 600;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899, #f59e0b);
+      background-size: 200% 200%;
+      animation: btnGlow 3s ease-in-out infinite;
+    }
+    @keyframes btnGlow {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    canvas#editor {
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      cursor: crosshair;
+      display: block;
+      width: 100%;
+      height: auto;
+      touch-action: none;
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .controls label { font-size: 12px; color: var(--text2); }
+    .controls select {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--glass-border);
+      font-size: 12px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      outline: none;
+    }
+    .controls select option { background: #1a1a2e; color: #fff; }
+    .controls input[type="range"] {
+      width: 90px;
+      accent-color: var(--accent);
+    }
+
+    #status { font-size: 11px; color: var(--text2); margin-left: auto; }
+    .help { font-size: 11px; color: var(--text2); margin-top: 5px; }
+    #info { font-size: 12px; color: var(--text2); margin-top: 8px; white-space: pre-line; min-height: 16px; }
+
+    .panel {
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin: 0 20px 10px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(10px);
+    }
+    .panel-style { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.2); }
+    .panel-record { background: rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.2); }
+    .panel-share { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.2); }
+
+    .lyrics-preview {
+      margin-top: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 10px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .sentence-item { display: flex; align-items: center; margin-bottom: 5px; }
+    .sentence-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 10px;
+      cursor: pointer;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+    .sentence-text { font-size: 13px; display: flex; flex-wrap: wrap; }
+    .sentence-text span {
+      padding: 2px 3px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    .sentence-text span.highlight {
+      background: var(--highlight);
+      color: #000;
+      font-weight: 600;
+      transform: scale(1.15);
+      box-shadow: 0 0 16px rgba(251,191,36,0.6);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      margin-top: 10px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.08s linear;
+    }
+
+    /* ============ 全屏预览 ============ */
+    .fullscreen-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(ellipse at center, #1a0a2e 0%, #0a0515 70%, #050208 100%);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+    .fullscreen-overlay.active { display: flex; }
+    .fullscreen-overlay::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(circle at 25% 30%, rgba(139,92,246,0.15) 0%, transparent 40%),
+        radial-gradient(circle at 75% 70%, rgba(236,72,153,0.12) 0%, transparent 40%);
+      pointer-events: none;
+    }
+    .fullscreen-lyrics {
+      font-size: 32px;
+      color: #fff;
+      text-align: center;
+      max-width: 80%;
+      line-height: 2.2;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 0 30px rgba(139,92,246,0.3);
+    }
+    .fullscreen-lyrics span {
+      padding: 6px 10px;
+      border-radius: 10px;
+      transition: all 0.25s;
+    }
+    .fullscreen-lyrics span.highlight {
+      background: var(--highlight);
+      color: #000;
+      font-weight: 700;
+      font-size: 1.3em;
+      box-shadow: 0 0 40px rgba(251,191,36,0.5);
+      transform: scale(1.1);
+    }
+
+    /* 音乐波纹效果 */
+    .music-waves {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      z-index: 2;
+    }
+    .music-waves span {
+      width: 4px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 2px;
+      animation: waveAnim 1s ease-in-out infinite;
+    }
+    .music-waves span:nth-child(2) { animation-delay: 0.1s; background: var(--accent2); }
+    .music-waves span:nth-child(3) { animation-delay: 0.2s; background: var(--accent3); }
+    .music-waves span:nth-child(4) { animation-delay: 0.3s; background: var(--accent2); }
+    .music-waves span:nth-child(5) { animation-delay: 0.4s; background: var(--accent); }
+    @keyframes waveAnim {
+      0%, 100% { height: 15px; }
+      50% { height: 40px; }
+    }
+
+    @media (max-width: 800px) {
+      .main { flex-direction: column; }
+      .left, .right { min-width: auto; }
+      .fullscreen-lyrics { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 浮动音符装饰 -->
+  <div class="floating-note" style="left:5%; animation-delay:0s;">🎵</div>
+  <div class="floating-note" style="left:15%; animation-delay:2s;">🎶</div>
+  <div class="floating-note" style="left:28%; animation-delay:4s;">🎵</div>
+  <div class="floating-note" style="left:40%; animation-delay:1s;">🎶</div>
+  <div class="floating-note" style="left:55%; animation-delay:3s;">🎵</div>
+  <div class="floating-note" style="left:68%; animation-delay:5s;">🎶</div>
+  <div class="floating-note" style="left:80%; animation-delay:2.5s;">🎵</div>
+  <div class="floating-note" style="left:90%; animation-delay:4.5s;">🎶</div>
+
+  <div class="container">
+    <header>
+      <h1><span class="music-icon">🎵</span> 我的音乐创作</h1>
+      <p>凭感觉创作，专业处理自动完成</p>
+    </header>
+
+    <div class="main">
+      <!-- 左侧：歌词 -->
+      <div class="left">
+        <h2>1. 写歌词</h2>
+        <textarea id="lyrics" placeholder="输入你的歌词，用标点或换行分隔句子。&#10;&#10;例如：&#10;今天的风很轻&#10;吹过我的窗前&#10;想起你的笑脸&#10;像阳光一样温暖"></textarea>
+        <button id="applyLyrics">✨ 应用歌词，生成音符</button>
+        <p id="info"></p>
+        <h2 style="margin-top:12px;">📝 歌词预览 <span class="badge">点击▶试听每句</span></h2>
+        <div class="lyrics-preview" id="lyricsPreview"></div>
+      </div>
+
+      <!-- 右侧：旋律编辑 -->
+      <div class="right">
+        <h2>2. 调旋律 <span class="badge">✅ 自动防跑调</span></h2>
+        <canvas id="editor" width="800" height="380"></canvas>
+        <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="controls">
+          <button id="playBtn">▶ 播放</button>
+          <button id="stopBtn" disabled>⏹ 停止</button>
+          <button class="gray" id="undoBtn" disabled>↩ 撤销</button>
+          <button class="gray" id="clearBtn">清空</button>
+          <label>乐器：</label>
+          <select id="melodyInstrument"></select>
+          <label>BPM：</label>
+          <input type="range" id="bpm" min="60" max="160" step="1" value="110">
+          <span id="bpmValue" style="font-size:11px;">110</span>
+          <button class="small" id="fullscreenBtn">🖥 全屏歌词</button>
+          <span id="status">就绪</span>
+        </div>
+        <p class="help">点击空白处添加音符 | 上下拖拽调音高 | 拖右边缘调时长 | 双击试听 | 右键删除</p>
+      </div>
+    </div>
+
+    <!-- 风格选择 -->
+    <div class="panel panel-style">
+      <h2>3. 选风格 <span class="badge">✅ 自动配和弦 & 自动编曲</span></h2>
+      <div class="controls">
+        <label>风格：</label>
+        <select id="accompStyle">
+          <option value="pop">流行</option>
+          <option value="folk">民谣</option>
+          <option value="electronic">电子</option>
+          <option value="rock">摇滚</option>
+          <option value="jazz">爵士</option>
+          <option value="chinese">古风</option>
+        </select>
+        <label>伴奏乐器：</label>
+        <select id="accompInstrument"></select>
+        <label>伴奏音量：</label>
+        <input type="range" id="accompVolume" min="0" max="1" step="0.05" value="0.3">
+        <span style="font-size:11px;" id="accompVolumeValue">0.3</span>
+      </div>
+    </div>
+
+    <!-- 录音 -->
+    <div class="panel panel-record">
+      <h2>4. 录你的声音 <span class="badge">✅ 自动降噪 / 修音 / 混音</span></h2>
+      <div class="controls">
+        <button id="startRecordBtn">🎤 开始录音</button>
+        <button id="stopRecordBtn" disabled>⏹ 停止</button>
+        <button id="playRecordBtn" disabled>▶ 试听修音后</button>
+        <span id="recordStatus" style="font-size:12px;color:var(--text2);">未录音</span>
+      </div>
+      <p style="font-size:11px;color:var(--text2);margin-top:4px;">录音后自动完成：降噪 → 修音 → EQ → 压缩 → 混响</p>
+    </div>
+
+    <!-- 播放与分享 -->
+    <div class="panel panel-share">
+      <h2>5. 播放 & 分享</h2>
+      <div class="controls">
+        <button class="big" id="playFullBtn">▶ 播放完整歌曲</button>
+        <button id="shareBtn">🔗 生成分享链接</button>
+        <span id="shareStatus" style="font-size:11px;color:var(--text2);"></span>
+      </div>
+      <p style="font-size:11px;color:var(--text2);margin-top:4px;">分享链接打开后在本网站内播放，无需登录，无法下载。</p>
+    </div>
+  </div>
+
+  <!-- 全屏歌词预览 -->
+  <div class="fullscreen-overlay" id="fullscreenOverlay">
+    <div class="fullscreen-lyrics" id="fullscreenLyrics"></div>
+    <div class="music-waves">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <button style="margin-top:30px;" id="closeFullscreen">✕ 关闭</button>
+  </div>
+
+  <script>
+    'use strict';
+
+    // ==================== 乐器库 ====================
+    const INSTRUMENTS = {
+      piano:       { name:'钢琴',     type:'poly',     harmonics:[1,0.5,0.3,0.15],        env:{a:0.01,d:0.3,s:0.2,r:0.5} },
+      epiano:      { name:'电钢琴',   type:'poly',     harmonics:[1,0.3,0.1,0.05],         env:{a:0.005,d:0.5,s:0.1,r:0.3} },
+      guitar:      { name:'吉他',     type:'pluck',    harmonics:[1,0.8,0.4,0.2],          env:{a:0.005,d:0.4,s:0.05,r:0.2} },
+      bass:        { name:'贝斯',     type:'sine',     harmonics:[1,0.3],                  env:{a:0.01,d:0.3,s:0.4,r:0.3} },
+      violin:      { name:'小提琴',   type:'sawtooth', harmonics:[1,0.6,0.3,0.1],          env:{a:0.2,d:0.3,s:0.5,r:0.5} },
+      cello:       { name:'大提琴',   type:'sawtooth', harmonics:[1,0.5,0.25],             env:{a:0.3,d:0.4,s:0.5,r:0.8} },
+      flute:       { name:'长笛',     type:'sine',     harmonics:[1,0.2],                  env:{a:0.1,d:0.1,s:0.7,r:0.3} },
+      sax:         { name:'萨克斯',   type:'sawtooth', harmonics:[1,0.7,0.4,0.2],          env:{a:0.05,d:0.2,s:0.6,r:0.4} },
+      trumpet:     { name:'小号',     type:'sawtooth', harmonics:[1,0.8,0.5,0.2],          env:{a:0.03,d:0.15,s:0.7,r:0.2} },
+      organ:       { name:'风琴',     type:'square',   harmonics:[1,0.5,0.3],              env:{a:0.1,d:0.1,s:0.8,r:0.1} },
+      synth:       { name:'电子合成', type:'sawtooth', harmonics:[1,0.6,0.3,0.2],          env:{a:0.02,d:0.2,s:0.4,r:0.2} },
+      musicbox:    { name:'八音盒',   type:'sine',     harmonics:[1,0.1],                  env:{a:0.005,d:1.5,s:0,r:0.1} },
+      strings:     { name:'弦乐',     type:'sawtooth', harmonics:[1,0.7,0.4,0.2,0.1],      env:{a:0.3,d:0.5,s:0.6,r:0.8} },
+      choir:       { name:'合唱',     type:'sawtooth', harmonics:[1,0.4,0.2,0.1],          env:{a:0.4,d:0.5,s:0.5,r:0.8} },
+      steelguitar: { name:'钢弦吉他', type:'pluck',    harmonics:[1,0.6,0.3,0.1],          env:{a:0.005,d:0.6,s:0.02,r:0.3} },
+      harmonica:   { name:'口琴',     type:'square',   harmonics:[1,0.5,0.3],              env:{a:0.05,d:0.2,s:0.4,r:0.3} },
+      bell:        { name:'铃铛',     type:'sine',     harmonics:[1,0.3,0.1],              env:{a:0.001,d:2,s:0,r:0.5} },
+      clarinet:    { name:'单簧管',   type:'square',   harmonics:[1,0.6,0.2],              env:{a:0.05,d:0.15,s:0.6,r:0.3} },
+      oboe:        { name:'双簧管',   type:'sawtooth', harmonics:[1,0.5,0.2],              env:{a:0.08,d:0.2,s:0.5,r:0.3} },
+      frenchhorn:  { name:'圆号',     type:'sawtooth', harmonics:[1,0.6,0.3],              env:{a:0.1,d:0.3,s:0.6,r:0.4} },
+      harp:        { name:'竖琴',     type:'pluck',    harmonics:[1,0.5,0.2,0.1],          env:{a:0.01,d:1.2,s:0,r:0.5} },
+    };
+    const INSTRUMENT_KEYS = Object.keys(INSTRUMENTS);
+
+    // ==================== 和弦与风格 ====================
+    const CHORD_MAP = {
+      'C':[48,52,55], 'G':[43,47,50], 'Am':[45,48,52], 'F':[41,45,48],
+      'Dm':[38,41,45], 'Em':[40,43,47], 'E':[40,44,47], 'A':[45,48,52]
+    };
+    const STYLE_CONFIG = {
+      pop:       { pattern:'full',     subdivision:1, drum:true  },
+      folk:      { pattern:'arpeggio', subdivision:2, drum:false },
+      electronic:{ pattern:'full',     subdivision:2, drum:true  },
+      rock:      { pattern:'accent',   subdivision:1, drum:true  },
+      jazz:      { pattern:'swing',    subdivision:1, drum:true  },
+      chinese:   { pattern:'arpeggio', subdivision:2, drum:false },
+    };
+
+    // ==================== 全局状态 ====================
+    const SCALE = [60,62,64,65,67,69,71,72,74,76,77,79,81,83,84];
+    let notes = [];
+    let lyricsChars = [];
+    let sentences = [];
+    let selectedNoteIndex = -1;
+    let isDragging = false;
+    let isResizing = false;
+    let resizeNoteIndex = -1;
+    let undoStack = [];
+    let currentPlayingIndex = -1;
+    let playToken = 0;
+    let audioCtx = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let autoTunedBuffer = null;
+    let autoChords = [];
+    let activeSources = [];
+
+    const canvas = document.getElementById('editor');
+    const ctx = canvas.getContext('2d');
+    const NOTE_H = 22;
+    const NOTE_GAP = 2;
+    const DUR_PX = 90;
+    const TOP_PAD = 28;
+    const LEFT_PAD = 45;
+    const BOT_PAD = 16;
+
+    // ==================== 工具函数 ====================
+    function midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+    function getBPM() { return parseInt(document.getElementById('bpm').value); }
+    function getBeatDur() { return 60 / getBPM(); }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function snapMidi(y) {
+      const minM = SCALE[0], maxM = SCALE[SCALE.length-1];
+      const usableH = canvas.height - TOP_PAD - BOT_PAD;
+      const rawMidi = maxM - (y / usableH) * (maxM - minM);
+      let closest = SCALE[0], minDist = Infinity;
+      for (const m of SCALE) {
+        const d = Math.abs(m - rawMidi);
+        if (d < minDist) { minDist = d; closest = m; }
+      }
+      return closest;
+    }
+    function midiToY(m) {
+      const minM = SCALE[0], maxM = SCALE[SCALE.length-1];
+      const usableH = canvas.height - TOP_PAD - BOT_PAD;
+      return TOP_PAD + (maxM - m) * (usableH / (maxM - minM));
+    }
+    function noteX(i) {
+      let x = LEFT_PAD;
+      for (let j = 0; j < i; j++) x += notes[j].duration * DUR_PX + NOTE_GAP;
+      return x;
+    }
+    function totalWidth() {
+      if (notes.length === 0) return LEFT_PAD;
+      return noteX(notes.length-1) + notes[notes.length-1].duration * DUR_PX;
+    }
+    function getPointerPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+      const cy = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+      return { x: (cx - rect.left) * (canvas.width / rect.width), y: (cy - rect.top) * (canvas.height / rect.height) };
+    }
+    function findNoteAt(x, y) {
+      for (let i = notes.length-1; i >= 0; i--) {
+        const nx = noteX(i), ny = midiToY(notes[i].midi), nw = notes[i].duration * DUR_PX;
+        if (x >= nx && x <= nx+nw && y >= ny-NOTE_H/2 && y <= ny+NOTE_H/2) return i;
+      }
+      return -1;
+    }
+    function isOnResizeHandle(x, y) {
+      for (let i = notes.length-1; i >= 0; i--) {
+        const nx = noteX(i), ny = midiToY(notes[i].midi), nw = notes[i].duration * DUR_PX;
+        if (x >= nx+nw-7 && x <= nx+nw+3 && y >= ny-NOTE_H/2 && y <= ny+NOTE_H/2) return i;
+      }
+      return -1;
+    }
+
+    // ==================== 绘图 ====================
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // 背景
+      ctx.fillStyle = '#0f0a1e';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // 网格
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.lineWidth = 0.5;
+      ctx.font = '10px sans-serif';
+      ctx.fillStyle = 'rgba(148,163,184,0.5)';
+      ctx.textAlign = 'right';
+      for (const m of SCALE) {
+        const y = midiToY(m);
+        ctx.beginPath(); ctx.moveTo(LEFT_PAD, y); ctx.lineTo(canvas.width-8, y); ctx.stroke();
+        ctx.fillText(m, LEFT_PAD-8, y+3);
+      }
+      ctx.fillStyle = 'rgba(148,163,184,0.5)';
+      ctx.textAlign = 'left';
+      ctx.fillText('时间 →', LEFT_PAD, canvas.height-4);
+      // 音符
+      notes.forEach((note, i) => {
+        const x = noteX(i), y = midiToY(note.midi), w = note.duration * DUR_PX;
+        let color = `hsl(${((note.midi-SCALE[0])/(SCALE[SCALE.length-1]-SCALE[0]))*260}, 70%, 60%)`;
+        if (i === currentPlayingIndex) color = '#fbbf24';
+        else if (i === selectedNoteIndex) color = '#93c5fd';
+        ctx.fillStyle = color;
+        ctx.shadowBlur = (i === selectedNoteIndex || i === currentPlayingIndex) ? 14 : 4;
+        ctx.shadowColor = color;
+        ctx.fillRect(x, y-NOTE_H/2, w, NOTE_H);
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 0.8;
+        ctx.strokeRect(x, y-NOTE_H/2, w, NOTE_H);
+        if (lyricsChars[i] && w > 18) {
+          ctx.fillStyle = '#fff';
+          ctx.font = '11px "PingFang SC","Microsoft YaHei",sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(lyricsChars[i], x+w/2, y);
+        }
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillRect(x+w-4, y-NOTE_H/2, 4, NOTE_H);
+      });
+      document.getElementById('status').textContent = `音符：${notes.length}`;
+      document.getElementById('undoBtn').disabled = undoStack.length === 0;
+    }
+
+    // ==================== 自动和弦分析 ====================
+    function analyzeChords(notesArray, beatsPerBar = 4) {
+      if (!notesArray.length) return ['C','G','Am','F'];
+      const result = [];
+      let barNotes = [];
+      let beatAccum = 0;
+      for (const note of notesArray) {
+        barNotes.push(note.midi);
+        beatAccum += note.duration;
+        if (beatAccum >= beatsPerBar) {
+          result.push(pickBestChord(barNotes));
+          barNotes = [];
+          beatAccum = 0;
+        }
+      }
+      if (barNotes.length > 0) result.push(pickBestChord(barNotes));
+      return result.length ? result : ['C','G','Am','F'];
+    }
+    function pickBestChord(midiNotes) {
+      if (!midiNotes.length) return 'C';
+      let best = 'C', bestScore = -Infinity;
+      for (const chordName of Object.keys(CHORD_MAP)) {
+        const chordPitches = CHORD_MAP[chordName].map(m => m % 12);
+        let score = 0;
+        midiNotes.forEach((midi, idx) => {
+          const pc = midi % 12;
+          if (chordPitches.includes(pc)) score += 2;
+          if (idx < 2) score += 1;
+        });
+        if (score > bestScore) { bestScore = score; best = chordName; }
+      }
+      return best;
+    }
+
+    // ==================== 自动音高修正 ====================
+    function detectPitchYIN(audioData, sampleRate) {
+      const frameSize = 2048, hopSize = 1024;
+      const numFrames = Math.floor((audioData.length - frameSize) / hopSize);
+      const pitches = [];
+      const threshold = 0.15;
+      for (let f = 0; f < numFrames; f++) {
+        const start = f * hopSize;
+        const frame = new Float32Array(frameSize);
+        for (let i = 0; i < frameSize; i++) frame[i] = audioData[start+i];
+        const minLag = Math.floor(sampleRate / 1000);
+        const maxLag = Math.floor(sampleRate / 60);
+        const diff = new Float32Array(maxLag + 1);
+        let cmnd = 1;
+        for (let tau = 1; tau <= maxLag; tau++) {
+          let sum = 0;
+          for (let i = 0; i < frameSize - tau; i++) {
+            const d = frame[i] - frame[i+tau];
+            sum += d * d;
+          }
+          diff[tau] = sum;
+          if (tau >= minLag && diff[tau] < cmnd) cmnd = diff[tau];
+        }
+        let found = false;
+        for (let tau = minLag; tau <= maxLag; tau++) {
+          if (diff[tau] < threshold * cmnd) {
+            if (tau > 1 && tau < maxLag) {
+              const s0 = diff[tau-1], s1 = diff[tau], s2 = diff[tau+1];
+              const denom = s0 - 2*s1 + s2;
+              if (denom > 0) {
+                const frac = (s0 - s2) / (2 * denom);
+                const refinedTau = tau + frac;
+                if (refinedTau > 0) {
+                  pitches.push(sampleRate / refinedTau);
+                  found = true;
+                  break;
+                }
+              }
+            }
+            pitches.push(sampleRate / tau);
+            found = true;
+            break;
+          }
+        }
+        if (!found) pitches.push(0);
+      }
+      return pitches;
+    }
+    function freqToMidi(freq) {
+      if (freq <= 0) return -1;
+      return Math.round(12 * Math.log2(freq / 440) + 69);
+    }
+    function autoTuneAudio(audioData, sampleRate, targetMidi, toleranceCents = 40) {
+      const pitches = detectPitchYIN(audioData, sampleRate);
+      const hopSize = 1024;
+      const output = new Float32Array(audioData.length);
+      for (let f = 0; f < pitches.length; f++) {
+        const start = f * hopSize;
+        const end = Math.min(start + hopSize, audioData.length);
+        const block = audioData.slice(start, end);
+        const freq = pitches[f];
+        if (freq > 0) {
+          const currentMidi = freqToMidi(freq);
+          if (currentMidi > 0) {
+            const cents = (targetMidi - currentMidi) * 100;
+            if (Math.abs(cents) > toleranceCents) {
+              const rate = midiToFreq(targetMidi) / freq;
+              const newLen = Math.floor(block.length / rate);
+              for (let i = 0; i < newLen && i < block.length; i++) {
+                const srcIdx = Math.floor(i * rate);
+                if (start + i < output.length) output[start+i] = block[srcIdx];
+              }
+              continue;
+            }
+          }
+        }
+        for (let i = 0; i < block.length && start + i < output.length; i++) {
+          output[start+i] = block[i];
+        }
+      }
+      return output;
+    }
+
+    // ==================== 谱减法降噪 ====================
+    function fft(re, im) {
+      const N = re.length;
+      if (N <= 1) return { re, im };
+      const half = N / 2;
+      const evenRe = new Array(half), evenIm = new Array(half), oddRe = new Array(half), oddIm = new Array(half);
+      for (let i = 0; i < half; i++) {
+        evenRe[i] = re[2*i]; evenIm[i] = im[2*i];
+        oddRe[i] = re[2*i+1]; oddIm[i] = im[2*i+1];
+      }
+      const even = fft(evenRe, evenIm), odd = fft(oddRe, oddIm);
+      const outRe = new Array(N), outIm = new Array(N);
+      for (let k = 0; k < half; k++) {
+        const angle = -2 * Math.PI * k / N;
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        const tRe = odd.re[k]*cos - odd.im[k]*sin;
+        const tIm = odd.re[k]*sin + odd.im[k]*cos;
+        outRe[k] = even.re[k] + tRe; outIm[k] = even.im[k] + tIm;
+        outRe[k+half] = even.re[k] - tRe; outIm[k+half] = even.im[k] - tIm;
+      }
+      return { re: outRe, im: outIm };
+    }
+    function ifft(re, im) {
+      const N = re.length;
+      const out = fft(re, im.map(v => -v));
+      return { re: out.re.map(v => v/N), im: out.im.map(v => -v/N) };
+    }
+    function spectralSubtraction(input, strength = 0.6) {
+      const frameSize = 2048, hopSize = 1024;
+      const numFrames = Math.floor((input.length - frameSize) / hopSize) + 1;
+      if (numFrames < 2) return input.slice();
+      const output = new Float32Array(input.length);
+      const wnd = new Float32Array(frameSize);
+      for (let i = 0; i < frameSize; i++) wnd[i] = 0.54 - 0.46 * Math.cos(2*Math.PI*i/(frameSize-1));
+      const noiseFrames = Math.min(5, numFrames);
+      const noiseMagSum = new Float32Array(frameSize);
+      for (let f = 0; f < noiseFrames; f++) {
+        const start = f * hopSize;
+        const frame = new Float32Array(frameSize);
+        for (let i = 0; i < frameSize; i++) frame[i] = input[start+i] * wnd[i];
+        const spec = fft(Array.from(frame), new Array(frameSize).fill(0));
+        for (let i = 0; i < frameSize; i++) noiseMagSum[i] += Math.hypot(spec.re[i], spec.im[i]);
+      }
+      const noiseMag = new Float32Array(frameSize);
+      for (let i = 0; i < frameSize; i++) noiseMag[i] = noiseMagSum[i] / noiseFrames;
+      const weight = new Float32Array(input.length);
+      for (let f = 0; f < numFrames; f++) {
+        const start = f * hopSize;
+        const frame = new Float32Array(frameSize);
+        for (let i = 0; i < frameSize; i++) frame[i] = input[start+i] * wnd[i];
+        const spec = fft(Array.from(frame), new Array(frameSize).fill(0));
+        const mag = new Float32Array(frameSize), phase = new Float32Array(frameSize);
+        for (let i = 0; i < frameSize; i++) {
+          mag[i] = Math.hypot(spec.re[i], spec.im[i]);
+          phase[i] = Math.atan2(spec.im[i], spec.re[i]);
+        }
+        for (let i = 0; i < frameSize; i++) {
+          mag[i] = Math.max(mag[i] - strength * noiseMag[i], 0);
+        }
+        const re = new Float32Array(frameSize), im = new Float32Array(frameSize);
+        for (let i = 0; i < frameSize; i++) {
+          re[i] = mag[i] * Math.cos(phase[i]);
+          im[i] = mag[i] * Math.sin(phase[i]);
+        }
+        const td = ifft(Array.from(re), Array.from(im));
+        for (let i = 0; i < frameSize; i++) {
+          output[start+i] += td.re[i] * wnd[i];
+          weight[start+i] += wnd[i] * wnd[i];
+        }
+      }
+      for (let i = 0; i < output.length; i++) {
+        if (weight[i] > 0.0001) output[i] /= weight[i];
+      }
+      return output;
+    }
+
+    // ==================== 自动混音链 ====================
+    function createAutoMixChain(ctx, sourceNode) {
+      let current = sourceNode;
+      const lowcut = ctx.createBiquadFilter();
+      lowcut.type = 'highpass'; lowcut.frequency.value = 80; lowcut.Q.value = 0.7;
+      current.connect(lowcut); current = lowcut;
+      const presence = ctx.createBiquadFilter();
+      presence.type = 'peaking'; presence.frequency.value = 2500; presence.gain.value = 3; presence.Q.value = 1;
+      current.connect(presence); current = presence;
+      const highcut = ctx.createBiquadFilter();
+      highcut.type = 'lowpass'; highcut.frequency.value = 12000;
+      current.connect(highcut); current = highcut;
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -24; comp.ratio.value = 4;
+      comp.attack.value = 0.005; comp.release.value = 0.15;
+      current.connect(comp); current = comp;
+      const reverb = ctx.createConvolver();
+      const rate = ctx.sampleRate;
+      const irLen = Math.floor(rate * 1.5);
+      const ir = ctx.createBuffer(2, irLen, rate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = ir.getChannelData(ch);
+        for (let i = 0; i < irLen; i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/irLen, 3);
+      }
+      reverb.buffer = ir;
+      const dry = ctx.createGain(); dry.gain.value = 0.75;
+      const wet = ctx.createGain(); wet.gain.value = 0.25;
+      current.connect(dry); current.connect(reverb); reverb.connect(wet);
+      const mixGain = ctx.createGain();
+      dry.connect(mixGain); wet.connect(mixGain);
+      return mixGain;
+    }
+
+    // ==================== 合成乐器 ====================
+    function createInstrumentSound(ctx, key, freq, duration, startTime, vol = 0.3) {
+      const inst = INSTRUMENTS[key];
+      if (!inst) return null;
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0, startTime);
+      const makeOsc = (type, f, hGain) => {
+        const o = ctx.createOscillator();
+        o.type = type; o.frequency.value = f;
+        const g = ctx.createGain(); g.gain.value = hGain;
+        o.connect(g); g.connect(master);
+        o.start(startTime); o.stop(startTime + duration + 0.5);
+      };
+      makeOsc(inst.type, freq, 1);
+      for (let i = 1; i < inst.harmonics.length; i++) {
+        makeOsc(inst.type, freq * (i+1), inst.harmonics[i]);
+      }
+      const env = inst.env;
+      master.gain.linearRampToValueAtTime(vol, startTime + env.a);
+      master.gain.linearRampToValueAtTime(vol * env.s, startTime + env.a + env.d);
+      master.gain.setValueAtTime(vol * env.s, startTime + duration - 0.02);
+      master.gain.linearRampToValueAtTime(0, startTime + duration + env.r);
+      return master;
+    }
+
+    // ==================== 鼓组 ====================
+    function createDrum(ctx, type, startTime, vol = 0.25) {
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, startTime);
+      if (type === 'kick') {
+        const o = ctx.createOscillator();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(120, startTime);
+        o.frequency.exponentialRampToValueAtTime(40, startTime + 0.1);
+        g.gain.linearRampToValueAtTime(vol, startTime);
+        g.gain.exponentialRampToValueAtTime(0.001, startTime + 0.15);
+        o.connect(g); o.start(startTime); o.stop(startTime + 0.2);
+      } else if (type === 'snare') {
+        const bufSize = ctx.sampleRate * 0.2;
+        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) d[i] = (Math.random()*2-1) * (1 - i/bufSize);
+        const src = ctx.createBufferSource(); src.buffer = buf;
+        g.gain.linearRampToValueAtTime(vol * 0.5, startTime);
+        g.gain.exponentialRampToValueAtTime(0.001, startTime + 0.2);
+        src.connect(g); src.start(startTime); src.stop(startTime + 0.2);
+      } else {
+        const bufSize = ctx.sampleRate * 0.08;
+        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) d[i] = (Math.random()*2-1) * (1 - i/bufSize);
+        const src = ctx.createBufferSource(); src.buffer = buf;
+        const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 7000;
+        g.gain.linearRampToValueAtTime(vol * 0.12, startTime);
+        g.gain.exponentialRampToValueAtTime(0.001, startTime + 0.05);
+        src.connect(hp); hp.connect(g); src.start(startTime); src.stop(startTime + 0.1);
+      }
+      g.connect(ctx.destination);
+    }
+
+    // ==================== 播放引擎 ====================
+    async function ensureAudioCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      await audioCtx.resume();
+      return audioCtx;
+    }
+    function stopAllPlayback() {
+      activeSources.forEach(s => { try { s.stop(); } catch(e){} });
+      activeSources = [];
+      currentPlayingIndex = -1;
+      clearHighlight();
+      document.getElementById('progressFill').style.width = '0%';
+      draw();
+    }
+    function clearHighlight() {
+      document.querySelectorAll('.sentence-text span, .fullscreen-lyrics span').forEach(s => s.classList.remove('highlight'));
+    }
+    function highlightChar(idx) {
+      clearHighlight();
+      const t1 = document.querySelector(`.sentence-text span[data-idx="${idx}"]`);
+      const t2 = document.querySelector(`.fullscreen-lyrics span[data-idx="${idx}"]`);
+      if (t1) { t1.classList.add('highlight'); t1.scrollIntoView({ block:'nearest', behavior:'smooth' }); }
+      if (t2) t2.classList.add('highlight');
+    }
+
+    async function playNotesRange(sIdx, eIdx) {
+      stopAllPlayback();
+      await ensureAudioCtx();
+      const token = ++playToken;
+      const beatDur = getBeatDur();
+      const startTime = audioCtx.currentTime;
+      const inst = document.getElementById('melodyInstrument').value;
+      let timeOffset = 0;
+      for (let i = sIdx; i <= eIdx; i++) {
+        const note = notes[i];
+        const output = createInstrumentSound(audioCtx, inst, midiToFreq(note.midi), note.duration * beatDur, startTime + timeOffset, 0.35);
+        if (output) output.connect(audioCtx.destination);
+        currentPlayingIndex = i;
+        draw();
+        highlightChar(i);
+        timeOffset += note.duration * beatDur;
+      }
+      const totalDur = timeOffset;
+      const progInt = setInterval(() => {
+        if (token !== playToken) { clearInterval(progInt); return; }
+        const elapsed = audioCtx.currentTime - startTime;
+        document.getElementById('progressFill').style.width = Math.min((elapsed/totalDur)*100, 100) + '%';
+        if (elapsed > totalDur + 0.5) {
+          clearInterval(progInt);
+          currentPlayingIndex = -1;
+          draw();
+          clearHighlight();
+          document.getElementById('progressFill').style.width = '0%';
+        }
+      }, 80);
+      document.getElementById('status').textContent = '播放中...';
+    }
+
+    async function playFullSong() {
+      if (notes.length === 0) return;
+      stopAllPlayback();
+      await ensureAudioCtx();
+      const token = ++playToken;
+      const beatDur = getBeatDur();
+      const startTime = audioCtx.currentTime;
+      const melodyInst = document.getElementById('melodyInstrument').value;
+      const accompInst = document.getElementById('accompInstrument').value;
+      const styleName = document.getElementById('accompStyle').value;
+      const accompVol = parseFloat(document.getElementById('accompVolume').value);
+      const styleCfg = STYLE_CONFIG[styleName];
+
+      autoChords = analyzeChords(notes);
+
+      let timeOffset = 0;
+      notes.forEach((note) => {
+        const output = createInstrumentSound(audioCtx, melodyInst, midiToFreq(note.midi), note.duration * beatDur, startTime + timeOffset, 0.35);
+        if (output) output.connect(audioCtx.destination);
+        timeOffset += note.duration * beatDur;
+      });
+
+      const totalBeats = notes.reduce((s, n) => s + n.duration, 0);
+      const beatsPerBar = 4;
+      const totalBars = Math.max(1, Math.ceil(totalBeats / beatsPerBar));
+      let barStart = startTime;
+      for (let bar = 0; bar < totalBars; bar++) {
+        const chordName = autoChords[bar % autoChords.length] || 'C';
+        const chordNotes = CHORD_MAP[chordName] || CHORD_MAP['C'];
+        const barBeats = Math.min(beatsPerBar, totalBeats - bar * beatsPerBar);
+        const subdiv = styleCfg.subdivision;
+        for (let beat = 0; beat < barBeats; beat++) {
+          const beatStart = barStart + beat * beatDur;
+          for (let sub = 0; sub < subdiv; sub++) {
+            const subTime = beatStart + sub * (beatDur / subdiv);
+            const dur = beatDur / subdiv * 0.85;
+            let midiNotes;
+            if (styleCfg.pattern === 'arpeggio') {
+              const arp = [0,2,1,2];
+              midiNotes = [chordNotes[arp[sub % 4]]];
+            } else if (styleCfg.pattern === 'swing') {
+              const sw = [0,1,2,1];
+              midiNotes = [chordNotes[sw[sub % 4]]];
+            } else {
+              midiNotes = chordNotes;
+            }
+            let volScale = 1;
+            if (styleCfg.pattern === 'accent' && beat % 2 === 1) volScale = 0.3;
+            midiNotes.forEach(m => {
+              const output = createInstrumentSound(audioCtx, accompInst, midiToFreq(m), dur, subTime, accompVol * volScale * 0.3);
+              if (output) output.connect(audioCtx.destination);
+            });
+          }
+          if (styleCfg.drum) {
+            if (beat === 0 || beat === 2) createDrum(audioCtx, 'kick', beatStart, 0.35);
+            if (beat === 1 || beat === 3) createDrum(audioCtx, 'snare', beatStart, 0.2);
+            for (let h = 0; h < 2; h++) createDrum(audioCtx, 'hihat', beatStart + h * beatDur / 2, 0.08);
+          }
+        }
+        barStart += beatsPerBar * beatDur;
+      }
+
+      if (autoTunedBuffer) {
+        const src = audioCtx.createBufferSource();
+        src.buffer = autoTunedBuffer;
+        const mixOut = createAutoMixChain(audioCtx, src);
+        const vocalGain = audioCtx.createGain();
+        vocalGain.gain.value = 0.85;
+        mixOut.connect(vocalGain);
+        vocalGain.connect(audioCtx.destination);
+        src.start(startTime);
+        activeSources.push(src);
+      }
+
+      const totalDur = totalBeats * beatDur;
+      const hlInt = setInterval(() => {
+        if (token !== playToken) { clearInterval(hlInt); return; }
+        const elapsed = audioCtx.currentTime - startTime;
+        let acc = 0, hlIdx = -1;
+        for (let i = 0; i < notes.length; i++) {
+          const d = notes[i].duration * beatDur;
+          if (elapsed >= acc && elapsed < acc + d) { hlIdx = i; break; }
+          acc += d;
+        }
+        if (hlIdx !== currentPlayingIndex) {
+          currentPlayingIndex = hlIdx;
+          draw();
+          if (hlIdx >= 0) highlightChar(hlIdx);
+        }
+        document.getElementById('progressFill').style.width = Math.min((elapsed/totalDur)*100, 100) + '%';
+        if (elapsed > totalDur + 1) {
+          clearInterval(hlInt);
+          currentPlayingIndex = -1;
+          draw();
+          clearHighlight();
+          document.getElementById('progressFill').style.width = '0%';
+        }
+      }, 80);
+      document.getElementById('status').textContent = '正在播放完整歌曲...';
+    }
+
+    // ==================== 歌词 ====================
+    function buildSentences() {
+      const text = document.getElementById('lyrics').value.trim();
+      sentences = [];
+      if (!text) return;
+      const rawSentences = text.split(/[，。！？；、\n]+/).filter(s => s.trim().length > 0);
+      let charIdx = 0;
+      for (const raw of rawSentences) {
+        const chars = raw.replace(/\s+/g, '').split('');
+        if (chars.length === 0) continue;
+        const s = charIdx;
+        const e = charIdx + chars.length - 1;
+        if (s < notes.length) {
+          sentences.push({ startIndex: s, endIndex: Math.min(e, notes.length-1), text: chars.join('') });
+        }
+        charIdx += chars.length;
+      }
+      renderLyricsPreview();
+    }
+    function renderLyricsPreview() {
+      const c = document.getElementById('lyricsPreview');
+      if (!sentences.length) {
+        c.innerHTML = '<p style="font-size:12px;color:rgba(148,163,184,0.6);">应用歌词后显示每句。</p>';
+        return;
+      }
+      let html = '';
+      sentences.forEach((s, idx) => {
+        html += `<div class="sentence-item"><button class="sentence-btn" data-idx="${idx}">▶</button><span class="sentence-text">${s.text.split('').map((ch, i) => `<span data-idx="${s.startIndex + i}">${ch}</span>`).join('')}</span></div>`;
+      });
+      c.innerHTML = html;
+      c.querySelectorAll('.sentence-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = parseInt(btn.dataset.idx);
+          playNotesRange(sentences[idx].startIndex, sentences[idx].endIndex);
+        });
+      });
+    }
+    function syncLyricsChars() {
+      const text = document.getElementById('lyrics').value.trim();
+      if (text) {
+        const allChars = [];
+        const rawSentences = text.split(/[，。！？；、\n]+/).filter(s => s.trim().length > 0);
+        for (const s of rawSentences) allChars.push(...s.replace(/\s+/g, '').split(''));
+        lyricsChars = allChars.slice(0, notes.length);
+      } else {
+        lyricsChars = [];
+      }
+    }
+
+    // ==================== 录音 ====================
+    document.getElementById('startRecordBtn').addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        recordedChunks = [];
+        mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+          document.getElementById('recordStatus').textContent = '录音完成，自动处理中...';
+          try {
+            await ensureAudioCtx();
+            const arrayBuf = await blob.arrayBuffer();
+            const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
+            const chData = audioBuf.getChannelData(0);
+
+            document.getElementById('recordStatus').textContent = '① 自动降噪...';
+            await sleep(80);
+            const denoised = spectralSubtraction(chData, 0.6);
+
+            document.getElementById('recordStatus').textContent = '② 自动修音...';
+            await sleep(80);
+            let targetMidi = 69;
+            if (notes.length > 0) {
+              const midiSum = notes.reduce((s, n) => s + n.midi, 0);
+              targetMidi = Math.round(midiSum / notes.length);
+            }
+            const tuned = autoTuneAudio(denoised, audioCtx.sampleRate, targetMidi, 40);
+
+            autoTunedBuffer = audioCtx.createBuffer(1, tuned.length, audioCtx.sampleRate);
+            autoTunedBuffer.copyToChannelData(tuned, 0);
+
+            document.getElementById('recordStatus').textContent = '③ 自动混音...';
+            await sleep(80);
+
+            document.getElementById('recordStatus').textContent = '✅ 处理完成，可试听';
+            document.getElementById('playRecordBtn').disabled = false;
+            stream.getTracks().forEach(t => t.stop());
+          } catch (err) {
+            document.getElementById('recordStatus').textContent = '处理失败：' + err.message;
+            stream.getTracks().forEach(t => t.stop());
+          }
+        };
+        mediaRecorder.start();
+        document.getElementById('startRecordBtn').disabled = true;
+        document.getElementById('stopRecordBtn').disabled = false;
+        document.getElementById('playRecordBtn').disabled = true;
+        document.getElementById('recordStatus').textContent = '录音中...';
+      } catch (err) {
+        alert('无法访问麦克风，请允许权限。错误：' + err.message);
+      }
+    });
+
+    document.getElementById('stopRecordBtn').addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        document.getElementById('startRecordBtn').disabled = false;
+        document.getElementById('stopRecordBtn').disabled = true;
+      }
+    });
+
+    document.getElementById('playRecordBtn').addEventListener('click', async () => {
+      if (!autoTunedBuffer) return;
+      await ensureAudioCtx();
+      const src = audioCtx.createBufferSource();
+      src.buffer = autoTunedBuffer;
+      const mixOut = createAutoMixChain(audioCtx, src);
+      mixOut.connect(audioCtx.destination);
+      src.start();
+      document.getElementById('recordStatus').textContent = '播放修音后的人声...';
+    });
+
+    // ==================== 事件绑定 ====================
+    canvas.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      canvas.setPointerCapture(e.pointerId);
+      const { x, y } = getPointerPos(e);
+      const handleIdx = isOnResizeHandle(x, y);
+      if (handleIdx >= 0) {
+        isResizing = true; resizeNoteIndex = handleIdx;
+        canvas.style.cursor = 'ew-resize';
+        pushUndo();
+        return;
+      }
+      const idx = findNoteAt(x, y);
+      if (idx >= 0) {
+        if (e.button === 2) {
+          e.preventDefault();
+          notes.splice(idx, 1); lyricsChars.splice(idx, 1);
+          selectedNoteIndex = -1;
+          pushUndo(); buildSentences(); draw();
+          return;
+        }
+        selectedNoteIndex = idx; isDragging = true;
+        canvas.style.cursor = 'grabbing';
+        pushUndo();
+      } else {
+        const tw = totalWidth();
+        if (x > tw && x < canvas.width - 8) {
+          notes.push({ midi: snapMidi(y), duration: 1 });
+          lyricsChars.push('');
+          selectedNoteIndex = notes.length - 1;
+          isDragging = true;
+          canvas.style.cursor = 'grabbing';
+          pushUndo(); buildSentences();
+        } else {
+          selectedNoteIndex = -1;
+        }
+      }
+      draw();
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      e.preventDefault();
+      const { x, y } = getPointerPos(e);
+      if (isResizing && resizeNoteIndex >= 0) {
+        const nx = noteX(resizeNoteIndex);
+        let d = (x - nx) / DUR_PX;
+        d = Math.round(d * 2) / 2;
+        d = Math.max(0.5, Math.min(8, d));
+        notes[resizeNoteIndex].duration = d;
+        draw(); return;
+      }
+      if (isDragging && selectedNoteIndex >= 0) {
+        notes[selectedNoteIndex].midi = snapMidi(y);
+        draw(); return;
+      }
+      if (isOnResizeHandle(x, y) >= 0) canvas.style.cursor = 'ew-resize';
+      else if (findNoteAt(x, y) >= 0) canvas.style.cursor = 'grab';
+      else canvas.style.cursor = 'crosshair';
+    });
+    canvas.addEventListener('pointerup', () => {
+      isDragging = false; isResizing = false; resizeNoteIndex = -1;
+      canvas.style.cursor = 'crosshair';
+    });
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    canvas.addEventListener('dblclick', (e) => {
+      const idx = findNoteAt(getPointerPos(e).x, getPointerPos(e).y);
+      if (idx >= 0) {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        audioCtx.resume().then(() => {
+          const out = createInstrumentSound(audioCtx, document.getElementById('melodyInstrument').value, midiToFreq(notes[idx].midi), 0.4, audioCtx.currentTime, 0.3);
+          if (out) out.connect(audioCtx.destination);
+        });
+      }
+    });
+
+    function pushUndo() {
+      undoStack.push(JSON.stringify(notes));
+      if (undoStack.length > 50) undoStack.shift();
+      document.getElementById('undoBtn').disabled = false;
+    }
+    document.getElementById('undoBtn').addEventListener('click', () => {
+      if (undoStack.length === 0) return;
+      notes = JSON.parse(undoStack.pop());
+      selectedNoteIndex = -1;
+      syncLyricsChars(); buildSentences(); draw();
+      document.getElementById('undoBtn').disabled = undoStack.length === 0;
+    });
+
+    document.getElementById('applyLyrics').addEventListener('click', () => {
+      const text = document.getElementById('lyrics').value.trim();
+      if (!text) return;
+      const rawSentences = text.split(/[，。！？；、\n]+/).filter(s => s.trim().length > 0);
+      let chars = [];
+      for (const s of rawSentences) chars = chars.concat(s.replace(/\s+/g, '').split(''));
+      if (chars.length === 0) return;
+      pushUndo();
+      notes = chars.map(() => ({ midi: 69, duration: 1 }));
+      lyricsChars = chars;
+      selectedNoteIndex = -1;
+      buildSentences();
+      renderLyricsPreview();
+      draw();
+      const endings = rawSentences.map(s => {
+        const c = s.replace(/\s+/g, '');
+        return c.charAt(c.length - 1);
+      });
+      let rhymeInfo = '';
+      const seen = {};
+      endings.forEach((ch, i) => {
+        if (seen[ch]) rhymeInfo += `第${seen[ch]}句和第${i+1}句结尾字相同（${ch}）\n`;
+        else seen[ch] = i + 1;
+      });
+      document.getElementById('info').textContent = `共 ${chars.length} 个字，已生成 ${notes.length} 个音符。${rhymeInfo ? '\n' + rhymeInfo : ''}`;
+    });
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (notes.length === 0) return;
+      await playNotesRange(0, notes.length - 1);
+    });
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      stopAllPlayback();
+      document.getElementById('stopBtn').disabled = true;
+    });
+    document.getElementById('playFullBtn').addEventListener('click', () => {
+      playFullSong();
+      document.getElementById('stopBtn').disabled = false;
+    });
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      stopAllPlayback();
+      pushUndo();
+      notes = [];
+      lyricsChars = [];
+      selectedNoteIndex = -1;
+      buildSentences(); draw();
+    });
+    document.getElementById('bpm').addEventListener('input', function() {
+      document.getElementById('bpmValue').textContent = this.value;
+    });
+    document.getElementById('accompVolume').addEventListener('input', function() {
+      document.getElementById('accompVolumeValue').textContent = this.value;
+    });
+
+    // ==================== 全屏歌词 ====================
+    document.getElementById('fullscreenBtn').addEventListener('click', () => {
+      if (!sentences.length) return;
+      let html = '';
+      sentences.forEach(s => {
+        html += s.text.split('').map((ch, i) => `<span data-idx="${s.startIndex + i}">${ch}</span>`).join('');
+        html += ' ';
+      });
+      document.getElementById('fullscreenLyrics').innerHTML = html;
+      document.getElementById('fullscreenOverlay').classList.add('active');
+      if (notes.length > 0) playFullSong();
+    });
+    document.getElementById('closeFullscreen').addEventListener('click', () => {
+      document.getElementById('fullscreenOverlay').classList.remove('active');
+      stopAllPlayback();
+    });
+
+    // ==================== 分享 ====================
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      const data = {
+        lyrics: document.getElementById('lyrics').value,
+        notes, lyricsChars,
+        melodyInstrument: document.getElementById('melodyInstrument').value,
+        accompInstrument: document.getElementById('accompInstrument').value,
+        accompStyle: document.getElementById('accompStyle').value,
+        accompVolume: document.getElementById('accompVolume').value,
+        bpm: document.getElementById('bpm').value,
+      };
+      const json = JSON.stringify(data);
+      const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(json))));
+      const link = window.location.href.split('#')[0] + '#song=' + encoded;
+      document.getElementById('shareStatus').textContent = '链接已生成';
+      navigator.clipboard.writeText(link).then(() => {
+        document.getElementById('shareStatus').textContent = '✅ 链接已复制，发给朋友吧！';
+      }).catch(() => {
+        document.getElementById('shareStatus').textContent = '请手动复制：' + link;
+      });
+    });
+
+    function loadSharedSong() {
+      const hash = window.location.hash;
+      if (!hash.startsWith('#song=')) return;
+      try {
+        const encoded = hash.substring(6);
+        const json = decodeURIComponent(escape(atob(decodeURIComponent(encoded))));
+        const data = JSON.parse(json);
+        document.getElementById('lyrics').value = data.lyrics || '';
+        notes = data.notes || [];
+        lyricsChars = data.lyricsChars || [];
+        if (data.melodyInstrument) document.getElementById('melodyInstrument').value = data.melodyInstrument;
+        if (data.accompInstrument) document.getElementById('accompInstrument').value = data.accompInstrument;
+        if (data.accompStyle) document.getElementById('accompStyle').value = data.accompStyle;
+        if (data.accompVolume !== undefined) {
+          document.getElementById('accompVolume').value = data.accompVolume;
+          document.getElementById('accompVolumeValue').textContent = data.accompVolume;
+        }
+        if (data.bpm !== undefined) {
+          document.getElementById('bpm').value = data.bpm;
+          document.getElementById('bpmValue').textContent = data.bpm;
+        }
+        selectedNoteIndex = -1;
+        buildSentences();
+        renderLyricsPreview();
+        draw();
+        document.querySelectorAll('textarea, button, select, input').forEach(el => {
+          if (!['playFullBtn', 'closeFullscreen'].includes(el.id)) el.style.display = 'none';
+        });
+        document.querySelector('.help').textContent = '🎵 分享播放模式（只读）';
+        playFullSong();
+      } catch (e) {
+        console.error('分享链接解析失败', e);
+      }
+    }
+
+    // ==================== 草稿自动保存 ====================
+    function saveDraft() {
+      const draft = {
+        lyrics: document.getElementById('lyrics').value,
+        notes, lyricsChars,
+        melodyInstrument: document.getElementById('melodyInstrument').value,
+        accompInstrument: document.getElementById('accompInstrument').value,
+        accompStyle: document.getElementById('accompStyle').value,
+        accompVolume: document.getElementById('accompVolume').value,
+        bpm: document.getElementById('bpm').value,
+      };
+      localStorage.setItem('musicAppDraft', JSON.stringify(draft));
+    }
+    function loadDraft() {
+      const draft = localStorage.getItem('musicAppDraft');
+      if (!draft) return;
+      try {
+        const data = JSON.parse(draft);
+        if (data.lyrics) document.getElementById('lyrics').value = data.lyrics;
+        if (data.notes) { notes = data.notes; lyricsChars = data.lyricsChars || []; }
+        if (data.melodyInstrument) document.getElementById('melodyInstrument').value = data.melodyInstrument;
+        if (data.accompInstrument) document.getElementById('accompInstrument').value = data.accompInstrument;
+        if (data.accompStyle) document.getElementById('accompStyle').value = data.accompStyle;
+        if (data.accompVolume !== undefined) {
+          document.getElementById('accompVolume').value = data.accompVolume;
+          document.getElementById('accompVolumeValue').textContent = data.accompVolume;
+        }
+        if (data.bpm !== undefined) {
+          document.getElementById('bpm').value = data.bpm;
+          document.getElementById('bpmValue').textContent = data.bpm;
+        }
+        selectedNoteIndex = -1;
+        buildSentences();
+        renderLyricsPreview();
+        draw();
+        document.getElementById('info').textContent = '已恢复上次草稿';
+      } catch (e) {}
+    }
+    setInterval(saveDraft, 30000);
+    window.addEventListener('beforeunload', saveDraft);
+
+    // ==================== 初始化 ====================
+    function populateSelects() {
+      const melodySel = document.getElementById('melodyInstrument');
+      const accompSel = document.getElementById('accompInstrument');
+      INSTRUMENT_KEYS.forEach(k => {
+        const o1 = document.createElement('option');
+        o1.value = k; o1.textContent = INSTRUMENTS[k].name;
+        melodySel.appendChild(o1);
+        const o2 = document.createElement('option');
+        o2.value = k; o2.textContent = INSTRUMENTS[k].name;
+        accompSel.appendChild(o2);
+      });
+      melodySel.value = 'piano';
+      accompSel.value = 'guitar';
+    }
+
+    populateSelects();
+    document.getElementById('bpmValue').textContent = document.getElementById('bpm').value;
+    document.getElementById('accompVolumeValue').textContent = document.getElementById('accompVolume').value;
+    loadDraft();
+    draw();
+    loadSharedSong();
+  </script>
+</body>
+</html>
