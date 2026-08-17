@@ -235,13 +235,6 @@
         <p id="info"></p>
         <h2 style="margin-top:6px;">📝 歌词预览 <span class="badge">点歌词定位音符</span></h2>
         <div class="lyrics-preview" id="lyricsPreview"></div>
-        <h2 style="margin-top:6px;">📋 旋律模板</h2>
-        <div class="controls">
-          <button class="small" data-template="pop">流行</button>
-          <button class="small" data-template="folk">民谣</button>
-          <button class="small" data-template="rock">摇滚</button>
-          <button class="small" data-template="chinese">古风</button>
-        </div>
       </div>
       <div class="right">
         <h2>2. 调旋律 <span class="badge">画布可滑动</span></h2>
@@ -265,18 +258,18 @@
     </div>
 
     <div class="panel panel-record">
-      <h2>3. 录一句话，克隆你的音色 <span class="badge">✅ 用你的音色唱整首歌</span></h2>
+      <h2>3. 录一句话，用你的声音唱歌 <span class="badge">✅ 自动合成整首歌</span></h2>
       <div class="controls">
         <button class="green" id="startRecordBtn">🎤 录一句话</button>
         <button id="stopRecordBtn" disabled>⏹ 停止</button>
-        <button class="orange" id="playRecordBtn" disabled>▶ 试听克隆音色</button>
-        <span id="recordStatus" style="font-size:10px;color:var(--text2);">未录音</span>
+        <button class="orange" id="playRecordBtn" disabled>▶ 试听你的声音</button>
+        <span id="recordStatus" style="font-size:10px;color:var(--text2);">还没有录音，点击🎤开始</span>
       </div>
-      <p style="font-size:9px;color:var(--text2);margin-top:3px;">💡 请用自然语气说："你好，这是我的声音"。音色会保存，下次自动使用。</p>
+      <p style="font-size:9px;color:var(--text2);margin-top:3px;">💡 录一句话，软件自动用你的声音合成整首歌。音色会保存，下次自动使用。</p>
     </div>
 
     <div class="panel panel-style">
-      <h2>4. 选风格 <span class="badge">和弦/编曲自动完成</span></h2>
+      <h2>4. 选风格 <span class="badge">旋律/和弦/编曲自动完成</span></h2>
       <div class="controls">
         <label>风格：</label>
         <select id="accompStyle">
@@ -296,6 +289,7 @@
         <input type="range" id="accompVolume" min="0" max="1" step="0.05" value="0.3">
         <span id="accompVolumeValue">0.3</span>
       </div>
+      <p style="font-size:9px;color:var(--text2);margin-top:3px;">💡 切换风格时，如果旋律还没调过，会自动配上该风格的旋律。</p>
     </div>
 
     <div class="panel panel-share">
@@ -345,10 +339,12 @@
     };
     const INSTRUMENT_KEYS = Object.keys(INSTRUMENTS);
 
-    const MELODY_TEMPLATES = {
+    const STYLE_MELODY_TEMPLATES = {
       pop: [67,69,71,72,69,67,65,67,69,71,72,69,67,65,64,65],
       folk: [65,67,69,65,67,69,72,69,67,65,64,62,65,64,62,60],
+      electronic: [64,64,67,64,69,67,64,62,60,60,64,60,67,64,62,60],
       rock: [64,64,67,64,69,67,64,62,60,60,64,60,67,64,62,60],
+      jazz: [65,67,69,71,72,71,69,67,65,67,69,71,72,74,72,71],
       chinese: [60,62,64,67,69,72,71,69,67,64,62,60,62,64,67,69],
     };
 
@@ -384,7 +380,6 @@
     let activeSources = [];
     let selectedAccompInstruments = ['guitar'];
     let dropdownOpen = false;
-    let activeSentenceIndex = -1;
 
     const canvas = document.getElementById('editor');
     const ctx = canvas.getContext('2d');
@@ -463,7 +458,29 @@
       return -1;
     }
 
-    // 滚动画布到指定音符
+    function isMelodyDefault() {
+      return notes.every(n => n.midi === 69);
+    }
+
+    function applyStyleMelody(styleName) {
+      const template = STYLE_MELODY_TEMPLATES[styleName];
+      if (!template || notes.length === 0) return;
+      pushUndo();
+      const count = Math.min(template.length, notes.length);
+      for (let i = 0; i < count; i++) {
+        notes[i].midi = template[i];
+        notes[i].duration = 1;
+      }
+      for (let i = count; i < notes.length; i++) {
+        notes[i].midi = template[i % template.length];
+        notes[i].duration = 1;
+      }
+      selectedNoteIndex = -1;
+      resizeCanvas();
+      draw();
+      showToast('已自动配上' + styleName + '风格旋律');
+    }
+
     function scrollToNote(index) {
       if (index < 0 || index >= notes.length) return;
       const x = noteX(index);
@@ -489,7 +506,6 @@
       ctx.textAlign = 'left';
       ctx.fillText('时间 →', LEFT_PAD, canvas.height-2);
 
-      // 自动段落标记（主歌/副歌）
       const sentenceRanges = sentences.map(s => ({ start: s.startIndex, end: s.endIndex }));
       const chorusStart = detectChorusStart(notes, sentenceRanges);
 
@@ -498,12 +514,9 @@
         let color = `hsl(${((note.midi-SCALE[0])/(SCALE[SCALE.length-1]-SCALE[0]))*260}, 70%, 60%)`;
         if (i === currentPlayingIndex) color = '#fbbf24';
         else if (i === selectedNoteIndex) color = '#93c5fd';
-
-        // 副歌区域用暖色调
-        if (chorusStart >= 0 && i >= chorusStart) {
+        if (chorusStart >= 0 && i >= chorusStart && i !== currentPlayingIndex && i !== selectedNoteIndex) {
           color = `hsl(35, 85%, 62%)`;
         }
-
         ctx.fillStyle = color;
         ctx.shadowBlur = 2; ctx.shadowColor = color;
         ctx.fillRect(x, y-NOTE_H/2, w, NOTE_H);
@@ -521,7 +534,6 @@
         ctx.fillRect(x+w-3, y-NOTE_H/2, 3, NOTE_H);
       });
 
-      // 副歌分割线
       if (chorusStart >= 0) {
         const x = noteX(chorusStart);
         ctx.strokeStyle = '#f59e0b';
@@ -539,10 +551,8 @@
       document.getElementById('undoBtn').disabled = undoStack.length === 0;
     }
 
-    // 自动检测副歌：找到旋律重复度最高的段落
     function detectChorusStart(notesArray, sentenceRanges) {
       if (sentenceRanges.length < 3) return -1;
-      // 简单策略：找音高最高的句子，作为副歌起点
       let highestAvgMidi = -1;
       let highestIdx = -1;
       sentenceRanges.forEach((s, idx) => {
@@ -555,9 +565,7 @@
           highestIdx = idx;
         }
       });
-      if (highestIdx > 0) {
-        return sentenceRanges[highestIdx].start;
-      }
+      if (highestIdx > 0) return sentenceRanges[highestIdx].start;
       return -1;
     }
 
@@ -1036,7 +1044,6 @@
         c.innerHTML = '<p style="font-size:10px;color:rgba(148,163,184,0.6);">应用歌词后显示每句。</p>';
         return;
       }
-      // 自动检测副歌起点
       const sentenceRanges = sentences.map(s => ({ start: s.startIndex, end: s.endIndex }));
       const chorusStart = detectChorusStart(notes, sentenceRanges);
       let chorusSentenceIdx = -1;
@@ -1055,7 +1062,6 @@
       });
       c.innerHTML = html;
 
-      // 点击句子：高亮 + 滚动画布到该句第一个音符
       c.querySelectorAll('.sentence-item').forEach(item => {
         item.addEventListener('click', () => {
           const idx = parseInt(item.dataset.idx);
@@ -1066,7 +1072,6 @@
             draw();
           }
         });
-        // 句前播放按钮
         const btn = item.querySelector('.sentence-btn');
         btn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1096,7 +1101,7 @@
         mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
         mediaRecorder.onstop = async () => {
           const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-          showLoading('正在提取音色...');
+          showLoading('正在提取你的声音...');
           try {
             await ensureAudioCtx();
             const arrayBuf = await blob.arrayBuffer();
@@ -1118,13 +1123,13 @@
             }
             voiceProfile = extractVoiceProfile(chData, audioCtx.sampleRate);
             localStorage.setItem('musiyou_voice', JSON.stringify(voiceProfile));
-            document.getElementById('recordStatus').textContent = '✅ 音色提取成功！';
+            document.getElementById('recordStatus').textContent = '✅ 你的声音已就绪，播放时自动使用';
             document.getElementById('playRecordBtn').disabled = false;
-            showToast('音色提取成功！');
+            showToast('你的声音已就绪！');
             stream.getTracks().forEach(t => t.stop());
           } catch (err) {
-            document.getElementById('recordStatus').textContent = '提取失败';
-            showToast('音色提取失败，请重试');
+            document.getElementById('recordStatus').textContent = '录音失败，请重试';
+            showToast('录音失败，请重试');
             stream.getTracks().forEach(t => t.stop());
           }
           hideLoading();
@@ -1133,7 +1138,7 @@
         document.getElementById('startRecordBtn').disabled = true;
         document.getElementById('stopRecordBtn').disabled = false;
         document.getElementById('playRecordBtn').disabled = true;
-        document.getElementById('recordStatus').textContent = '录音中...请说一句话';
+        document.getElementById('recordStatus').textContent = '正在录音...请说一句话';
       } catch (err) {
         showToast('无法访问麦克风，请允许权限');
       }
@@ -1305,7 +1310,6 @@
       renderLyricsPreview();
       resizeCanvas();
       draw();
-      // 押韵提示
       const endings = rawSentences.map(s => { const c = s.replace(/\s+/g, ''); return c.charAt(c.length-1); });
       let rhymeInfo = '';
       const seen = {};
@@ -1314,30 +1318,6 @@
         else seen[ch] = i + 1;
       });
       document.getElementById('info').textContent = `共${chars.length}字，生成${notes.length}音符${rhymeInfo ? '\n' + rhymeInfo : ''}`;
-    });
-
-    // 模板
-    document.querySelectorAll('[data-template]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const template = MELODY_TEMPLATES[btn.dataset.template];
-        if (!template) return;
-        pushUndo();
-        if (notes.length > 0) {
-          const count = Math.min(template.length, notes.length);
-          for (let i = 0; i < count; i++) {
-            notes[i].midi = template[i];
-            notes[i].duration = 1;
-          }
-        } else {
-          notes = template.map(m => ({ midi: m, duration: 1 }));
-          lyricsChars = template.map(() => '');
-        }
-        selectedNoteIndex = -1;
-        buildSentences();
-        resizeCanvas();
-        draw();
-        showToast('已应用模板');
-      });
     });
 
     document.getElementById('playBtn').addEventListener('click', async () => {
@@ -1365,6 +1345,13 @@
     });
     document.getElementById('accompVolume').addEventListener('input', function() {
       document.getElementById('accompVolumeValue').textContent = this.value;
+    });
+
+    // 风格切换：如果旋律是默认的，自动套用该风格旋律
+    document.getElementById('accompStyle').addEventListener('change', function() {
+      if (notes.length > 0 && isMelodyDefault()) {
+        applyStyleMelody(this.value);
+      }
     });
 
     // 主题
@@ -1511,7 +1498,7 @@
     if (savedVoice) {
       try {
         voiceProfile = JSON.parse(savedVoice);
-        document.getElementById('recordStatus').textContent = '✅ 已恢复保存的音色';
+        document.getElementById('recordStatus').textContent = '✅ 你的声音已就绪，播放时自动使用';
         document.getElementById('playRecordBtn').disabled = false;
       } catch (e) {}
     }
