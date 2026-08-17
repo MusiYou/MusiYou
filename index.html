@@ -2,17 +2,17 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>音你而创 · MusiYou</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body {
       font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
       min-height: 100vh;
       display: flex;
       justify-content: center;
-      align-items: center;
-      padding: 20px;
+      align-items: flex-start;
+      padding: 10px;
       color: #f1f5f9;
       background: #0f0a1e;
       overflow-x: hidden;
@@ -27,9 +27,10 @@
         radial-gradient(ellipse at 50% 80%, rgba(59,130,246,0.15) 0%, transparent 50%),
         #0f0a1e;
       z-index: -3;
+      pointer-events: none;
     }
     .floating-note {
-      position: fixed; font-size: 24px; opacity: 0.12;
+      position: fixed; font-size: 20px; opacity: 0.12;
       animation: floatNote 15s linear infinite;
       z-index: -1; pointer-events: none;
     }
@@ -43,111 +44,173 @@
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.12);
       backdrop-filter: blur(20px);
-      border-radius: 20px;
+      border-radius: 16px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-      max-width: 1150px; width: 100%; overflow: hidden;
+      max-width: 100%;
+      width: 100%;
+      overflow: hidden;
     }
     header {
       background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(236,72,153,0.25));
       border-bottom: 1px solid rgba(255,255,255,0.12);
-      color: white; padding: 22px 30px; text-align: center;
+      color: white; padding: 16px 16px; text-align: center;
     }
-    header h1 { font-size: 26px; margin-bottom: 4px; }
-    header p { font-size: 13px; opacity: 0.8; }
-    .main { display: flex; gap: 20px; padding: 20px; flex-wrap: wrap; }
-    .left { flex: 1; min-width: 250px; }
-    .right { flex: 2; min-width: 480px; }
-    h2 { font-size: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-    .badge { font-size: 10px; background: rgba(74,222,128,0.15); color: #4ade80; padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(74,222,128,0.3); }
+    header h1 { font-size: 22px; margin-bottom: 2px; }
+    header p { font-size: 11px; opacity: 0.8; }
+
+    .main { display: flex; gap: 12px; padding: 12px; flex-wrap: wrap; }
+    .left { flex: 1; min-width: 0; }
+    .right { flex: 1.5; min-width: 0; }
+
+    h2 { font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .badge { font-size: 9px; background: rgba(74,222,128,0.15); color: #4ade80; padding: 1px 6px; border-radius: 20px; border: 1px solid rgba(74,222,128,0.3); white-space: nowrap; }
+
     textarea {
-      width: 100%; height: 140px; padding: 14px;
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
-      font-size: 15px; resize: vertical; outline: none;
+      width: 100%; height: 100px; padding: 10px;
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+      font-size: 14px; resize: vertical; outline: none;
       font-family: inherit; background: rgba(255,255,255,0.05); color: #f1f5f9;
     }
     textarea::placeholder { color: rgba(148,163,184,0.5); }
-    textarea:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.2); }
+    textarea:focus { border-color: #8b5cf6; }
+
     button {
       background: linear-gradient(135deg, #8b5cf6, #ec4899);
-      color: white; border: none; padding: 9px 18px; border-radius: 10px;
-      font-size: 13px; cursor: pointer; transition: all 0.2s; margin: 2px;
-      font-family: inherit; touch-action: manipulation;
+      color: white; border: none; padding: 8px 14px; border-radius: 8px;
+      font-size: 12px; cursor: pointer; transition: all 0.2s; margin: 2px;
+      font-family: inherit; touch-action: manipulation; min-height: 36px;
     }
-    button:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(139,92,246,0.4); }
+    button:hover { transform: translateY(-1px); }
     button:active { transform: scale(0.97); }
-    button:disabled { background: #3a3a4a; cursor: not-allowed; box-shadow: none; transform: none; }
-    button.small { padding: 5px 10px; font-size: 11px; border-radius: 6px; }
+    button:disabled { background: #3a3a4a; cursor: not-allowed; }
+    button.small { padding: 4px 8px; font-size: 10px; min-height: 28px; border-radius: 6px; }
     button.gray { background: rgba(100,116,139,0.6); }
-    button.big { font-size: 16px; padding: 14px 28px; font-weight: 600; border-radius: 14px; }
+    button.big { font-size: 14px; padding: 12px 20px; font-weight: 600; border-radius: 12px; }
 
-    /* 画布滚动容器 */
     .canvas-scroll {
       overflow-x: auto;
       overflow-y: hidden;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid rgba(255,255,255,0.12);
       max-width: 100%;
+      -webkit-overflow-scrolling: touch;
     }
     canvas#editor {
       background: rgba(255,255,255,0.03);
       cursor: crosshair;
       display: block;
       touch-action: none;
+      max-width: none;
     }
-    .controls { display: flex; align-items: center; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-    .controls label { font-size: 12px; color: #94a3b8; }
+    .controls { display: flex; align-items: center; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+    .controls label { font-size: 11px; color: #94a3b8; white-space: nowrap; }
     .controls select {
-      padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
-      font-size: 12px; background: rgba(255,255,255,0.08); color: #f1f5f9; outline: none;
+      padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12);
+      font-size: 11px; background: rgba(255,255,255,0.08); color: #f1f5f9; outline: none;
+      max-width: 120px;
     }
     .controls select option { background: #1a1a2e; }
-    .controls input[type="range"] { width: 90px; accent-color: #8b5cf6; }
-    #status { font-size: 11px; color: #94a3b8; margin-left: auto; }
-    .help { font-size: 11px; color: #94a3b8; margin-top: 5px; }
-    #info { font-size: 12px; color: #94a3b8; margin-top: 8px; white-space: pre-line; min-height: 16px; }
-    .panel { border-radius: 14px; padding: 16px 20px; margin: 0 20px 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); }
+    .controls input[type="range"] { width: 70px; accent-color: #8b5cf6; }
+
+    /* 多选乐器复选框 */
+    .instrument-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 6px;
+    }
+    .inst-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+      background: rgba(255,255,255,0.05);
+      white-space: nowrap;
+    }
+    .inst-checkbox.checked {
+      background: rgba(139,92,246,0.35);
+      border-color: #8b5cf6;
+    }
+    .inst-checkbox input[type="checkbox"] { display: none; }
+
+    #status { font-size: 10px; color: #94a3b8; margin-left: auto; }
+    .help { font-size: 10px; color: #94a3b8; margin-top: 4px; }
+    #info { font-size: 11px; color: #94a3b8; margin-top: 6px; white-space: pre-line; min-height: 14px; }
+
+    .panel { border-radius: 10px; padding: 10px 12px; margin: 6px 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); }
     .panel-style { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.2); }
     .panel-record { background: rgba(59,130,246,0.06); border-color: rgba(59,130,246,0.2); }
     .panel-share { background: rgba(139,92,246,0.06); border-color: rgba(139,92,246,0.2); }
+
     .lyrics-preview {
-      margin-top: 10px; background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
-      padding: 10px; max-height: 180px; overflow-y: auto;
+      margin-top: 8px; background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+      padding: 8px; max-height: 150px; overflow-y: auto;
     }
-    .sentence-item { display: flex; align-items: center; margin-bottom: 5px; }
+    .sentence-item { display: flex; align-items: center; margin-bottom: 4px; }
     .sentence-btn {
-      background: #8b5cf6; color: white; border: none; padding: 3px 10px;
-      border-radius: 5px; font-size: 10px; cursor: pointer; margin-right: 8px; flex-shrink: 0;
+      background: #8b5cf6; color: white; border: none; padding: 2px 8px;
+      border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 6px; flex-shrink: 0;
     }
-    .sentence-text { font-size: 13px; display: flex; flex-wrap: wrap; }
-    .sentence-text span { padding: 2px 3px; border-radius: 4px; transition: all 0.2s; }
-    .sentence-text span.highlight { background: #fbbf24; color: #000; font-weight: 600; transform: scale(1.15); box-shadow: 0 0 16px rgba(251,191,36,0.6); }
-    .progress-bar { width: 100%; height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+    .sentence-text { font-size: 12px; display: flex; flex-wrap: wrap; }
+    .sentence-text span { padding: 1px 2px; border-radius: 3px; transition: all 0.2s; }
+    .sentence-text span.highlight { background: #fbbf24; color: #000; font-weight: 600; box-shadow: 0 0 10px rgba(251,191,36,0.5); }
+
+    .progress-bar { width: 100%; height: 5px; background: rgba(255,255,255,0.08); border-radius: 3px; margin-top: 8px; overflow: hidden; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b); border-radius: 3px; width: 0%; transition: width 0.08s linear; }
+
     .fullscreen-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: radial-gradient(ellipse at center, #1a0a2e 0%, #0a0515 70%, #050208 100%);
       z-index: 9999; justify-content: center; align-items: center; flex-direction: column;
     }
     .fullscreen-overlay.active { display: flex; }
-    .fullscreen-lyrics { font-size: 30px; color: #fff; text-align: center; max-width: 80%; line-height: 2.2; }
-    .fullscreen-lyrics span { padding: 6px 10px; border-radius: 10px; transition: all 0.25s; }
-    .fullscreen-lyrics span.highlight { background: #fbbf24; color: #000; font-weight: 700; font-size: 1.3em; box-shadow: 0 0 40px rgba(251,191,36,0.5); }
-    @media (max-width: 800px) {
+    .fullscreen-lyrics { font-size: 22px; color: #fff; text-align: center; max-width: 85%; line-height: 2; }
+    .fullscreen-lyrics span { padding: 4px 8px; border-radius: 8px; transition: all 0.25s; }
+    .fullscreen-lyrics span.highlight { background: #fbbf24; color: #000; font-weight: 700; font-size: 1.25em; }
+
+    /* 移动端优化 */
+    @media (max-width: 600px) {
+      body { padding: 4px; }
+      .container { border-radius: 10px; }
+      header { padding: 10px 10px; }
+      header h1 { font-size: 18px; }
+      header p { font-size: 10px; }
+      .main { padding: 8px; gap: 8px; flex-direction: column; }
+      .left, .right { min-width: 0; width: 100%; }
+      h2 { font-size: 12px; }
+      textarea { height: 80px; font-size: 13px; padding: 8px; }
+      button { padding: 7px 10px; font-size: 11px; min-height: 32px; }
+      button.big { font-size: 13px; padding: 10px 16px; }
+      .controls { gap: 3px; }
+      .controls select { font-size: 10px; padding: 4px 6px; max-width: 100px; }
+      .controls input[type="range"] { width: 55px; }
+      .panel { padding: 8px 10px; margin: 4px 6px; }
+      .inst-checkbox { font-size: 9px; padding: 3px 6px; }
+      .lyrics-preview { max-height: 100px; }
+      .fullscreen-lyrics { font-size: 18px; }
+      .canvas-scroll { border-radius: 8px; }
+    }
+    @media (min-width: 601px) and (max-width: 900px) {
       .main { flex-direction: column; }
-      .left, .right { min-width: auto; }
-      .fullscreen-lyrics { font-size: 22px; }
+      .left, .right { width: 100%; }
     }
   </style>
 </head>
 <body>
-  <div class="floating-note" style="left:5%; animation-delay:0s;">🎵</div>
-  <div class="floating-note" style="left:15%; animation-delay:2s;">🎶</div>
-  <div class="floating-note" style="left:28%; animation-delay:4s;">🎵</div>
-  <div class="floating-note" style="left:40%; animation-delay:1s;">🎶</div>
-  <div class="floating-note" style="left:55%; animation-delay:3s;">🎵</div>
-  <div class="floating-note" style="left:68%; animation-delay:5s;">🎶</div>
-  <div class="floating-note" style="left:80%; animation-delay:2.5s;">🎵</div>
+  <div class="floating-note" style="left:3%; animation-delay:0s;">🎵</div>
+  <div class="floating-note" style="left:12%; animation-delay:2s;">🎶</div>
+  <div class="floating-note" style="left:25%; animation-delay:4s;">🎵</div>
+  <div class="floating-note" style="left:38%; animation-delay:1s;">🎶</div>
+  <div class="floating-note" style="left:50%; animation-delay:3s;">🎵</div>
+  <div class="floating-note" style="left:65%; animation-delay:5s;">🎶</div>
+  <div class="floating-note" style="left:78%; animation-delay:2.5s;">🎵</div>
   <div class="floating-note" style="left:90%; animation-delay:4.5s;">🎶</div>
 
   <div class="container">
@@ -159,17 +222,17 @@
     <div class="main">
       <div class="left">
         <h2>1. 写歌词</h2>
-        <textarea id="lyrics" placeholder="输入你的歌词，用标点或换行分隔句子。&#10;&#10;例如：&#10;今天的风很轻&#10;吹过我的窗前&#10;想起你的笑脸&#10;像阳光一样温暖"></textarea>
-        <button id="applyLyrics">✨ 应用歌词，生成音符</button>
+        <textarea id="lyrics" placeholder="输入歌词，标点分隔句子。&#10;例如：今天的风很轻，吹过我的窗前"></textarea>
+        <button id="applyLyrics">✨ 应用歌词</button>
         <p id="info"></p>
-        <h2 style="margin-top:12px;">📝 歌词预览 <span class="badge">点击▶试听每句</span></h2>
+        <h2 style="margin-top:8px;">📝 歌词预览 <span class="badge">点▶试听</span></h2>
         <div class="lyrics-preview" id="lyricsPreview"></div>
       </div>
 
       <div class="right">
-        <h2>2. 调旋律 <span class="badge">✅ 自动防跑调</span> <span class="badge">👉 画布可左右滑动</span></h2>
+        <h2>2. 调旋律 <span class="badge">自动防跑调</span> <span class="badge">画布可滑动</span></h2>
         <div class="canvas-scroll">
-          <canvas id="editor" width="800" height="380"></canvas>
+          <canvas id="editor" height="320"></canvas>
         </div>
         <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
         <div class="controls">
@@ -181,17 +244,16 @@
           <select id="melodyInstrument"></select>
           <label>BPM：</label>
           <input type="range" id="bpm" min="60" max="160" step="1" value="110">
-          <span id="bpmValue" style="font-size:11px;">110</span>
-          <button class="small" id="fullscreenBtn">🖥 全屏歌词</button>
+          <span id="bpmValue" style="font-size:10px;">110</span>
+          <button class="small" id="fullscreenBtn">🖥 全屏</button>
           <span id="status">就绪</span>
         </div>
-        <p class="help">画布可左右滑动 | 点击空白处添加音符 | 上下拖拽调音高 | 拖右边缘调时长 | 双击试听 | 右键删除</p>
+        <p class="help">画布可左右滑动 | 点击添加音符 | 上下拖拽调音高 | 拖右边缘调时长 | 双击试听 | 右键删除</p>
       </div>
     </div>
 
-    <!-- 风格与人声 -->
     <div class="panel panel-style">
-      <h2>3. 选风格 & 人声 <span class="badge">✅ 自动配和弦 & 自动编曲</span></h2>
+      <h2>3. 选风格 <span class="badge">自动配和弦+编曲</span></h2>
       <div class="controls">
         <label>风格：</label>
         <select id="accompStyle">
@@ -202,12 +264,12 @@
           <option value="jazz">爵士</option>
           <option value="chinese">古风</option>
         </select>
-        <label>伴奏乐器：</label>
-        <select id="accompInstrument"></select>
         <label>伴奏音量：</label>
         <input type="range" id="accompVolume" min="0" max="1" step="0.05" value="0.3">
-        <span id="accompVolumeValue" style="font-size:11px;">0.3</span>
+        <span id="accompVolumeValue" style="font-size:10px;">0.3</span>
       </div>
+      <h2 style="margin-top:8px;">🎸 伴奏乐器（可多选）</h2>
+      <div class="instrument-checkboxes" id="accompInstruments"></div>
       <div class="controls" style="margin-top:6px;">
         <label>👤 演唱声音：</label>
         <select id="vocalSource">
@@ -215,37 +277,33 @@
           <option value="male">虚拟男声</option>
           <option value="user">我的录音（需先录音）</option>
         </select>
-        <span style="font-size:11px;color:#94a3b8;">（没录音时自动用虚拟人声演唱）</span>
+        <span style="font-size:10px;color:#94a3b8;">未录音时用虚拟人声</span>
       </div>
     </div>
 
-    <!-- 录音 -->
     <div class="panel panel-record">
-      <h2>4. 录你的声音 <span class="badge">✅ 自动降噪 / 修音 / 混音</span></h2>
+      <h2>4. 录你的声音 <span class="badge">自动降噪/修音/混音</span></h2>
       <div class="controls">
         <button id="startRecordBtn">🎤 开始录音</button>
         <button id="stopRecordBtn" disabled>⏹ 停止</button>
-        <button id="playRecordBtn" disabled>▶ 试听修音后</button>
-        <span id="recordStatus" style="font-size:12px;color:#94a3b8;">未录音</span>
+        <button id="playRecordBtn" disabled>▶ 试听</button>
+        <span id="recordStatus" style="font-size:11px;color:#94a3b8;">未录音</span>
       </div>
-      <p style="font-size:11px;color:#94a3b8;margin-top:4px;">录音后自动完成：降噪 → 修音 → EQ → 压缩 → 混响，可替换虚拟人声</p>
     </div>
 
-    <!-- 播放与分享 -->
     <div class="panel panel-share">
       <h2>5. 播放 & 分享</h2>
       <div class="controls">
         <button class="big" id="playFullBtn">▶ 播放完整歌曲</button>
-        <button id="shareBtn">🔗 生成分享链接</button>
-        <span id="shareStatus" style="font-size:11px;color:#94a3b8;"></span>
+        <button id="shareBtn">🔗 分享链接</button>
+        <span id="shareStatus" style="font-size:10px;color:#94a3b8;"></span>
       </div>
-      <p style="font-size:11px;color:#94a3b8;margin-top:4px;">分享链接打开后在本网站内播放，无需登录，无法下载。</p>
     </div>
   </div>
 
   <div class="fullscreen-overlay" id="fullscreenOverlay">
     <div class="fullscreen-lyrics" id="fullscreenLyrics"></div>
-    <button style="margin-top:30px;" id="closeFullscreen">✕ 关闭</button>
+    <button style="margin-top:20px;" id="closeFullscreen">✕ 关闭</button>
   </div>
 
   <script>
@@ -277,10 +335,9 @@
     };
     const INSTRUMENT_KEYS = Object.keys(INSTRUMENTS);
 
-    // 男/女声共振峰参数
     const VOCAL_FORMANTS = {
-      female: { f1: 800, f2: 2000, f3: 3000, q1: 10, q2: 12, q3: 14, baseFreq: 220 },
-      male: { f1: 500, f2: 1500, f3: 2500, q1: 8, q2: 10, q3: 12, baseFreq: 110 },
+      female: { f1:800, f2:2000, f3:3000, q1:10, q2:12, q3:14 },
+      male: { f1:500, f2:1500, f3:2500, q1:8, q2:10, q3:12 },
     };
 
     const CHORD_MAP = {
@@ -314,15 +371,17 @@
     let autoTunedBuffer = null;
     let autoChords = [];
     let activeSources = [];
+    let selectedAccompInstruments = ['guitar']; // 默认选中吉他
 
     const canvas = document.getElementById('editor');
     const ctx = canvas.getContext('2d');
     const NOTE_H = 22;
     const NOTE_GAP = 2;
-    const DUR_PX = 90;
-    const TOP_PAD = 28;
-    const LEFT_PAD = 45;
-    const BOT_PAD = 16;
+    const DUR_PX = 70; // 移动端更紧凑
+    const TOP_PAD = 26;
+    const LEFT_PAD = 40;
+    const BOT_PAD = 14;
+    const MIN_CANVAS_WIDTH = 600; // 最小画布宽度
 
     // ==================== 工具函数 ====================
     function midiToFreq(m) { return 440 * Math.pow(2, (m-69)/12); }
@@ -330,11 +389,9 @@
     function getBeatDur() { return 60 / getBPM(); }
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-    // 动态调整画布宽度，保证每个字都有空间
     function resizeCanvas() {
-      const minWidth = 800;
-      const neededWidth = notes.length > 0 ? totalWidth() + 100 : minWidth;
-      canvas.width = Math.max(minWidth, Math.ceil(neededWidth));
+      const neededWidth = notes.length > 0 ? totalWidth() + 80 : MIN_CANVAS_WIDTH;
+      canvas.width = Math.max(MIN_CANVAS_WIDTH, Math.ceil(neededWidth));
       draw();
     }
 
@@ -379,9 +436,37 @@
     function isOnResizeHandle(x, y) {
       for (let i = notes.length-1; i >= 0; i--) {
         const nx = noteX(i), ny = midiToY(notes[i].midi), nw = notes[i].duration * DUR_PX;
-        if (x >= nx+nw-7 && x <= nx+nw+3 && y >= ny-NOTE_H/2 && y <= ny+NOTE_H/2) return i;
+        if (x >= nx+nw-6 && x <= nx+nw+3 && y >= ny-NOTE_H/2 && y <= ny+NOTE_H/2) return i;
       }
       return -1;
+    }
+
+    // ==================== 多选伴奏乐器 ====================
+    function renderInstrumentCheckboxes() {
+      const container = document.getElementById('accompInstruments');
+      container.innerHTML = '';
+      INSTRUMENT_KEYS.forEach(key => {
+        const label = document.createElement('label');
+        label.className = 'inst-checkbox';
+        if (selectedAccompInstruments.includes(key)) label.classList.add('checked');
+        label.innerHTML = `<input type="checkbox" value="${key}" ${selectedAccompInstruments.includes(key) ? 'checked' : ''}> ${INSTRUMENTS[key].name}`;
+        label.addEventListener('click', () => {
+          const idx = selectedAccompInstruments.indexOf(key);
+          if (idx >= 0) {
+            if (selectedAccompInstruments.length > 1) {
+              selectedAccompInstruments.splice(idx, 1);
+              label.classList.remove('checked');
+            } else {
+              alert('请至少选择一种伴奏乐器');
+              return;
+            }
+          } else {
+            selectedAccompInstruments.push(key);
+            label.classList.add('checked');
+          }
+        });
+        container.appendChild(label);
+      });
     }
 
     // ==================== 绘图 ====================
@@ -391,38 +476,38 @@
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = 'rgba(255,255,255,0.06)';
       ctx.lineWidth = 0.5;
-      ctx.font = '10px sans-serif';
+      ctx.font = '9px sans-serif';
       ctx.fillStyle = 'rgba(148,163,184,0.5)';
       ctx.textAlign = 'right';
       for (const m of SCALE) {
         const y = midiToY(m);
-        ctx.beginPath(); ctx.moveTo(LEFT_PAD, y); ctx.lineTo(canvas.width-8, y); ctx.stroke();
-        ctx.fillText(m, LEFT_PAD-8, y+3);
+        ctx.beginPath(); ctx.moveTo(LEFT_PAD, y); ctx.lineTo(canvas.width-6, y); ctx.stroke();
+        ctx.fillText(m, LEFT_PAD-6, y+3);
       }
       ctx.fillStyle = 'rgba(148,163,184,0.5)';
       ctx.textAlign = 'left';
-      ctx.fillText('时间 →（可滑动）', LEFT_PAD, canvas.height-4);
+      ctx.fillText('时间 →', LEFT_PAD, canvas.height-3);
       notes.forEach((note, i) => {
         const x = noteX(i), y = midiToY(note.midi), w = note.duration * DUR_PX;
         let color = `hsl(${((note.midi-SCALE[0])/(SCALE[SCALE.length-1]-SCALE[0]))*260}, 70%, 60%)`;
         if (i === currentPlayingIndex) color = '#fbbf24';
         else if (i === selectedNoteIndex) color = '#93c5fd';
         ctx.fillStyle = color;
-        ctx.shadowBlur = (i === selectedNoteIndex || i === currentPlayingIndex) ? 14 : 4;
+        ctx.shadowBlur = (i === selectedNoteIndex || i === currentPlayingIndex) ? 10 : 3;
         ctx.shadowColor = color;
         ctx.fillRect(x, y-NOTE_H/2, w, NOTE_H);
         ctx.shadowBlur = 0;
         ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-        ctx.lineWidth = 0.8;
+        ctx.lineWidth = 0.6;
         ctx.strokeRect(x, y-NOTE_H/2, w, NOTE_H);
-        if (lyricsChars[i] && w > 18) {
+        if (lyricsChars[i] && w > 14) {
           ctx.fillStyle = '#fff';
-          ctx.font = '11px "PingFang SC","Microsoft YaHei",sans-serif';
+          ctx.font = '10px "PingFang SC","Microsoft YaHei",sans-serif';
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
           ctx.fillText(lyricsChars[i], x+w/2, y);
         }
         ctx.fillStyle = 'rgba(255,255,255,0.5)';
-        ctx.fillRect(x+w-4, y-NOTE_H/2, 4, NOTE_H);
+        ctx.fillRect(x+w-3, y-NOTE_H/2, 3, NOTE_H);
       });
       document.getElementById('status').textContent = `音符：${notes.length}`;
       document.getElementById('undoBtn').disabled = undoStack.length === 0;
@@ -462,35 +547,24 @@
       return best;
     }
 
-    // ==================== 虚拟人声合成（共振峰） ====================
+    // ==================== 虚拟人声 ====================
     function createVirtualVocal(ctx, gender, freq, duration, startTime, vol = 0.4) {
       const formants = VOCAL_FORMANTS[gender] || VOCAL_FORMANTS.female;
       const master = ctx.createGain();
       master.gain.setValueAtTime(0, startTime);
-
-      // 基频（用锯齿波模拟声带振动）
       const osc = ctx.createOscillator();
       osc.type = 'sawtooth';
       osc.frequency.value = freq;
-
-      // 共振峰滤波器（模拟口腔共鸣）
       const f1 = ctx.createBiquadFilter();
       f1.type = 'bandpass'; f1.frequency.value = formants.f1; f1.Q.value = formants.q1;
-
       const f2 = ctx.createBiquadFilter();
       f2.type = 'bandpass'; f2.frequency.value = formants.f2; f2.Q.value = formants.q2;
-
       const f3 = ctx.createBiquadFilter();
       f3.type = 'bandpass'; f3.frequency.value = formants.f3; f3.Q.value = formants.q3;
-
-      // 连接链
       osc.connect(f1); f1.connect(f2); f2.connect(f3); f3.connect(master);
-
-      // 包络
       master.gain.linearRampToValueAtTime(vol, startTime + 0.05);
       master.gain.setValueAtTime(vol, startTime + duration - 0.03);
       master.gain.linearRampToValueAtTime(0, startTime + duration + 0.1);
-
       osc.start(startTime);
       osc.stop(startTime + duration + 0.15);
       return master;
@@ -812,7 +886,7 @@
       const beatDur = getBeatDur();
       const startTime = audioCtx.currentTime;
       const melodyInst = document.getElementById('melodyInstrument').value;
-      const accompInst = document.getElementById('accompInstrument').value;
+      const accompInsts = selectedAccompInstruments.length > 0 ? selectedAccompInstruments : ['guitar'];
       const styleName = document.getElementById('accompStyle').value;
       const accompVol = parseFloat(document.getElementById('accompVolume').value);
       const vocalSource = document.getElementById('vocalSource').value;
@@ -820,7 +894,7 @@
 
       autoChords = analyzeChords(notes);
 
-      // 旋律（乐器）
+      // 旋律
       let timeOffset = 0;
       notes.forEach((note) => {
         const output = createInstrumentSound(audioCtx, melodyInst, midiToFreq(note.midi), note.duration * beatDur, startTime + timeOffset, 0.25);
@@ -828,10 +902,11 @@
         timeOffset += note.duration * beatDur;
       });
 
-      // 伴奏
+      // 伴奏（多乐器）
       const totalBeats = notes.reduce((s, n) => s + n.duration, 0);
       const beatsPerBar = 4;
       const totalBars = Math.max(1, Math.ceil(totalBeats / beatsPerBar));
+      const perInstVol = accompVol / Math.max(1, accompInsts.length) * 0.5; // 多乐器时降低每个乐器音量
       let barStart = startTime;
       for (let bar = 0; bar < totalBars; bar++) {
         const chordName = autoChords[bar % autoChords.length] || 'C';
@@ -855,9 +930,12 @@
             }
             let volScale = 1;
             if (styleCfg.pattern === 'accent' && beat % 2 === 1) volScale = 0.3;
-            midiNotes.forEach(m => {
-              const output = createInstrumentSound(audioCtx, accompInst, midiToFreq(m), dur, subTime, accompVol * volScale * 0.25);
-              if (output) output.connect(audioCtx.destination);
+            // 为每个选中的伴奏乐器创建声音
+            accompInsts.forEach(instKey => {
+              midiNotes.forEach(m => {
+                const output = createInstrumentSound(audioCtx, instKey, midiToFreq(m), dur, subTime, perInstVol * volScale);
+                if (output) output.connect(audioCtx.destination);
+              });
             });
           }
           if (styleCfg.drum) {
@@ -869,9 +947,8 @@
         barStart += beatsPerBar * beatDur;
       }
 
-      // 人声部分
+      // 人声
       if (vocalSource === 'user' && autoTunedBuffer) {
-        // 用户自己的声音
         const src = audioCtx.createBufferSource();
         src.buffer = autoTunedBuffer;
         const mixOut = createAutoMixChain(audioCtx, src);
@@ -882,20 +959,16 @@
         src.start(startTime);
         activeSources.push(src);
       } else if (vocalSource === 'female' || vocalSource === 'male') {
-        // 虚拟人声：根据旋律音高和歌词演唱
-        let vocalTimeOffset = 0;
-        notes.forEach((note, idx) => {
-          const freq = midiToFreq(note.midi);
-          const dur = note.duration * beatDur;
-          const vocal = createVirtualVocal(audioCtx, vocalSource, freq, dur, startTime + vocalTimeOffset, 0.45);
-          if (vocal) vocal.connect(audioCtx.destination);
-          vocalTimeOffset += dur;
-        });
-      } else if (autoTunedBuffer) {
-        // 如果选了"我的录音"但还没录音，自动用虚拟女声
         let vocalTimeOffset = 0;
         notes.forEach((note) => {
-          const vocal = createVirtualVocal(audioCtx, 'female', midiToFreq(note.midi), note.duration * beatDur, startTime + vocalTimeOffset, 0.45);
+          const vocal = createVirtualVocal(audioCtx, vocalSource, midiToFreq(note.midi), note.duration * beatDur, startTime + vocalTimeOffset, 0.4);
+          if (vocal) vocal.connect(audioCtx.destination);
+          vocalTimeOffset += note.duration * beatDur;
+        });
+      } else if (autoTunedBuffer) {
+        let vocalTimeOffset = 0;
+        notes.forEach((note) => {
+          const vocal = createVirtualVocal(audioCtx, 'female', midiToFreq(note.midi), note.duration * beatDur, startTime + vocalTimeOffset, 0.4);
           if (vocal) vocal.connect(audioCtx.destination);
           vocalTimeOffset += note.duration * beatDur;
         });
@@ -951,7 +1024,7 @@
     function renderLyricsPreview() {
       const c = document.getElementById('lyricsPreview');
       if (!sentences.length) {
-        c.innerHTML = '<p style="font-size:12px;color:rgba(148,163,184,0.6);">应用歌词后显示每句。</p>';
+        c.innerHTML = '<p style="font-size:11px;color:rgba(148,163,184,0.6);">应用歌词后显示每句。</p>';
         return;
       }
       let html = '';
@@ -987,17 +1060,15 @@
         mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
         mediaRecorder.onstop = async () => {
           const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-          document.getElementById('recordStatus').textContent = '录音完成，自动处理中...';
+          document.getElementById('recordStatus').textContent = '自动处理中...';
           try {
             await ensureAudioCtx();
             const arrayBuf = await blob.arrayBuffer();
             const audioBuf = await audioCtx.decodeAudioData(arrayBuf);
             const chData = audioBuf.getChannelData(0);
-            document.getElementById('recordStatus').textContent = '① 自动降噪...';
-            await sleep(80);
+            await sleep(50);
             const denoised = spectralSubtraction(chData, 0.6);
-            document.getElementById('recordStatus').textContent = '② 自动修音...';
-            await sleep(80);
+            await sleep(50);
             let targetMidi = 69;
             if (notes.length > 0) {
               const midiSum = notes.reduce((s, n) => s + n.midi, 0);
@@ -1006,15 +1077,12 @@
             const tuned = autoTuneAudio(denoised, audioCtx.sampleRate, targetMidi, 40);
             autoTunedBuffer = audioCtx.createBuffer(1, tuned.length, audioCtx.sampleRate);
             autoTunedBuffer.copyToChannelData(tuned, 0);
-            document.getElementById('recordStatus').textContent = '③ 自动混音...';
-            await sleep(80);
-            document.getElementById('recordStatus').textContent = '✅ 处理完成，可替换虚拟人声';
+            document.getElementById('recordStatus').textContent = '✅ 完成';
             document.getElementById('playRecordBtn').disabled = false;
-            // 自动切换到用户录音
             document.getElementById('vocalSource').value = 'user';
             stream.getTracks().forEach(t => t.stop());
           } catch (err) {
-            document.getElementById('recordStatus').textContent = '处理失败：' + err.message;
+            document.getElementById('recordStatus').textContent = '失败';
             stream.getTracks().forEach(t => t.stop());
           }
         };
@@ -1024,7 +1092,7 @@
         document.getElementById('playRecordBtn').disabled = true;
         document.getElementById('recordStatus').textContent = '录音中...';
       } catch (err) {
-        alert('无法访问麦克风，请允许权限。错误：' + err.message);
+        alert('无法访问麦克风：' + err.message);
       }
     });
     document.getElementById('stopRecordBtn').addEventListener('click', () => {
@@ -1070,7 +1138,7 @@
         pushUndo();
       } else {
         const tw = totalWidth();
-        if (x > tw && x < canvas.width - 8) {
+        if (x > tw && x < canvas.width - 6) {
           notes.push({ midi: snapMidi(y), duration: 1 });
           lyricsChars.push('');
           selectedNoteIndex = notes.length - 1;
@@ -1153,7 +1221,7 @@
         if (seen[ch]) rhymeInfo += `第${seen[ch]}句和第${i+1}句结尾字相同（${ch}）\n`;
         else seen[ch] = i + 1;
       });
-      document.getElementById('info').textContent = `共 ${chars.length} 个字，已生成 ${notes.length} 个音符。${rhymeInfo ? '\n' + rhymeInfo : ''}`;
+      document.getElementById('info').textContent = `共${chars.length}字，生成${notes.length}音符。${rhymeInfo ? '\n' + rhymeInfo : ''}`;
     });
 
     document.getElementById('playBtn').addEventListener('click', async () => {
@@ -1206,7 +1274,7 @@
         lyrics: document.getElementById('lyrics').value,
         notes, lyricsChars,
         melodyInstrument: document.getElementById('melodyInstrument').value,
-        accompInstrument: document.getElementById('accompInstrument').value,
+        accompInstruments: selectedAccompInstruments,
         accompStyle: document.getElementById('accompStyle').value,
         accompVolume: document.getElementById('accompVolume').value,
         bpm: document.getElementById('bpm').value,
@@ -1215,11 +1283,11 @@
       const json = JSON.stringify(data);
       const encoded = encodeURIComponent(btoa(unescape(encodeURIComponent(json))));
       const link = window.location.href.split('#')[0] + '#song=' + encoded;
-      document.getElementById('shareStatus').textContent = '链接已生成';
+      document.getElementById('shareStatus').textContent = '✅ 已复制';
       navigator.clipboard.writeText(link).then(() => {
-        document.getElementById('shareStatus').textContent = '✅ 链接已复制，发给朋友吧！';
+        document.getElementById('shareStatus').textContent = '✅ 链接已复制！';
       }).catch(() => {
-        document.getElementById('shareStatus').textContent = '请手动复制：' + link;
+        document.getElementById('shareStatus').textContent = '请手动复制';
       });
     });
 
@@ -1234,7 +1302,10 @@
         notes = data.notes || [];
         lyricsChars = data.lyricsChars || [];
         if (data.melodyInstrument) document.getElementById('melodyInstrument').value = data.melodyInstrument;
-        if (data.accompInstrument) document.getElementById('accompInstrument').value = data.accompInstrument;
+        if (data.accompInstruments) {
+          selectedAccompInstruments = data.accompInstruments;
+          renderInstrumentCheckboxes();
+        }
         if (data.accompStyle) document.getElementById('accompStyle').value = data.accompStyle;
         if (data.accompVolume !== undefined) {
           document.getElementById('accompVolume').value = data.accompVolume;
@@ -1253,6 +1324,7 @@
         document.querySelectorAll('textarea, button, select, input').forEach(el => {
           if (!['playFullBtn', 'closeFullscreen'].includes(el.id)) el.style.display = 'none';
         });
+        document.querySelector('.instrument-checkboxes').style.display = 'none';
         document.querySelector('.help').textContent = '🎵 分享播放模式（只读）';
         playFullSong();
       } catch (e) {
@@ -1260,13 +1332,13 @@
       }
     }
 
-    // ==================== 草稿自动保存 ====================
+    // ==================== 草稿 ====================
     function saveDraft() {
       const draft = {
         lyrics: document.getElementById('lyrics').value,
         notes, lyricsChars,
         melodyInstrument: document.getElementById('melodyInstrument').value,
-        accompInstrument: document.getElementById('accompInstrument').value,
+        accompInstruments: selectedAccompInstruments,
         accompStyle: document.getElementById('accompStyle').value,
         accompVolume: document.getElementById('accompVolume').value,
         bpm: document.getElementById('bpm').value,
@@ -1282,7 +1354,10 @@
         if (data.lyrics) document.getElementById('lyrics').value = data.lyrics;
         if (data.notes) { notes = data.notes; lyricsChars = data.lyricsChars || []; }
         if (data.melodyInstrument) document.getElementById('melodyInstrument').value = data.melodyInstrument;
-        if (data.accompInstrument) document.getElementById('accompInstrument').value = data.accompInstrument;
+        if (data.accompInstruments) {
+          selectedAccompInstruments = data.accompInstruments;
+          renderInstrumentCheckboxes();
+        }
         if (data.accompStyle) document.getElementById('accompStyle').value = data.accompStyle;
         if (data.accompVolume !== undefined) {
           document.getElementById('accompVolume').value = data.accompVolume;
@@ -1307,20 +1382,16 @@
     // ==================== 初始化 ====================
     function populateSelects() {
       const melodySel = document.getElementById('melodyInstrument');
-      const accompSel = document.getElementById('accompInstrument');
       INSTRUMENT_KEYS.forEach(k => {
-        const o1 = document.createElement('option');
-        o1.value = k; o1.textContent = INSTRUMENTS[k].name;
-        melodySel.appendChild(o1);
-        const o2 = document.createElement('option');
-        o2.value = k; o2.textContent = INSTRUMENTS[k].name;
-        accompSel.appendChild(o2);
+        const o = document.createElement('option');
+        o.value = k; o.textContent = INSTRUMENTS[k].name;
+        melodySel.appendChild(o);
       });
       melodySel.value = 'piano';
-      accompSel.value = 'guitar';
     }
 
     populateSelects();
+    renderInstrumentCheckboxes();
     document.getElementById('bpmValue').textContent = document.getElementById('bpm').value;
     document.getElementById('accompVolumeValue').textContent = document.getElementById('accompVolume').value;
     loadDraft();
