@@ -5,7 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>音你而创 · MusiYou</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none;
+    }
     body {
       font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
       min-height: 100vh;
@@ -17,6 +24,8 @@
       background: #0f0a1e;
       overflow-x: hidden;
       position: relative;
+      -webkit-user-select: none;
+      user-select: none;
     }
     body::before {
       content: '';
@@ -28,17 +37,6 @@
         #0f0a1e;
       z-index: -3;
       pointer-events: none;
-    }
-    .floating-note {
-      position: fixed; font-size: 20px; opacity: 0.12;
-      animation: floatNote 15s linear infinite;
-      z-index: -1; pointer-events: none;
-    }
-    @keyframes floatNote {
-      0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
-      10% { opacity: 0.15; }
-      90% { opacity: 0.15; }
-      100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
     }
     .container {
       background: rgba(255,255,255,0.06);
@@ -53,39 +51,41 @@
     header {
       background: linear-gradient(135deg, rgba(139,92,246,0.3), rgba(236,72,153,0.25));
       border-bottom: 1px solid rgba(255,255,255,0.12);
-      color: white; padding: 16px 16px; text-align: center;
+      color: white; padding: 14px 14px; text-align: center;
     }
-    header h1 { font-size: 22px; margin-bottom: 2px; }
+    header h1 { font-size: 20px; margin-bottom: 2px; }
     header p { font-size: 11px; opacity: 0.8; }
 
-    .main { display: flex; gap: 12px; padding: 12px; flex-wrap: wrap; }
-    .left { flex: 1; min-width: 0; }
-    .right { flex: 1.5; min-width: 0; }
+    .main { display: flex; gap: 10px; padding: 10px; flex-wrap: wrap; }
+    .left, .right { flex: 1; min-width: 0; }
 
-    h2 { font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    h2 { font-size: 13px; margin-bottom: 6px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
     .badge { font-size: 9px; background: rgba(74,222,128,0.15); color: #4ade80; padding: 1px 6px; border-radius: 20px; border: 1px solid rgba(74,222,128,0.3); white-space: nowrap; }
 
     textarea {
-      width: 100%; height: 100px; padding: 10px;
+      width: 100%; height: 90px; padding: 10px;
       border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
       font-size: 14px; resize: vertical; outline: none;
       font-family: inherit; background: rgba(255,255,255,0.05); color: #f1f5f9;
+      -webkit-user-select: text;
+      user-select: text;
     }
     textarea::placeholder { color: rgba(148,163,184,0.5); }
     textarea:focus { border-color: #8b5cf6; }
 
     button {
       background: linear-gradient(135deg, #8b5cf6, #ec4899);
-      color: white; border: none; padding: 8px 14px; border-radius: 8px;
-      font-size: 12px; cursor: pointer; transition: all 0.2s; margin: 2px;
-      font-family: inherit; touch-action: manipulation; min-height: 36px;
+      color: white; border: none; padding: 10px 16px; border-radius: 10px;
+      font-size: 13px; cursor: pointer; transition: all 0.2s; margin: 2px;
+      font-family: inherit; touch-action: manipulation;
+      min-height: 42px;
+      -webkit-tap-highlight-color: transparent;
     }
-    button:hover { transform: translateY(-1px); }
-    button:active { transform: scale(0.97); }
+    button:active { transform: scale(0.96); }
     button:disabled { background: #3a3a4a; cursor: not-allowed; }
-    button.small { padding: 4px 8px; font-size: 10px; min-height: 28px; border-radius: 6px; }
+    button.small { padding: 6px 10px; font-size: 11px; min-height: 32px; border-radius: 8px; }
     button.gray { background: rgba(100,116,139,0.6); }
-    button.big { font-size: 14px; padding: 12px 20px; font-weight: 600; border-radius: 12px; }
+    button.big { font-size: 15px; padding: 14px 22px; font-weight: 600; border-radius: 14px; }
 
     .canvas-scroll {
       overflow-x: auto;
@@ -100,44 +100,45 @@
       cursor: crosshair;
       display: block;
       touch-action: none;
-      max-width: none;
+      -webkit-touch-callout: none;
     }
     .controls { display: flex; align-items: center; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
     .controls label { font-size: 11px; color: #94a3b8; white-space: nowrap; }
     .controls select {
-      padding: 5px 8px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.12);
-      font-size: 11px; background: rgba(255,255,255,0.08); color: #f1f5f9; outline: none;
-      max-width: 120px;
+      padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
+      font-size: 12px; background: rgba(255,255,255,0.08); color: #f1f5f9; outline: none;
+      max-width: 130px;
+      min-height: 36px;
     }
     .controls select option { background: #1a1a2e; }
-    .controls input[type="range"] { width: 70px; accent-color: #8b5cf6; }
+    .controls input[type="range"] { width: 80px; accent-color: #8b5cf6; min-height: 30px; }
 
-    /* 多选乐器复选框 */
-    .instrument-checkboxes {
+    /* 多选乐器按钮组 */
+    .instrument-buttons {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px;
+      gap: 6px;
       margin-top: 6px;
     }
-    .inst-checkbox {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      font-size: 10px;
-      padding: 4px 8px;
+    .inst-btn {
+      display: inline-block;
+      padding: 8px 12px;
       border-radius: 20px;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.25);
       cursor: pointer;
+      font-size: 11px;
       user-select: none;
-      transition: all 0.15s;
       background: rgba(255,255,255,0.05);
-      white-space: nowrap;
+      color: #f1f5f9;
+      transition: all 0.15s;
+      min-height: 36px;
+      text-align: center;
     }
-    .inst-checkbox.checked {
-      background: rgba(139,92,246,0.35);
+    .inst-btn.active {
+      background: rgba(139,92,246,0.4);
       border-color: #8b5cf6;
+      box-shadow: 0 0 8px rgba(139,92,246,0.5);
     }
-    .inst-checkbox input[type="checkbox"] { display: none; }
 
     #status { font-size: 10px; color: #94a3b8; margin-left: auto; }
     .help { font-size: 10px; color: #94a3b8; margin-top: 4px; }
@@ -151,12 +152,13 @@
     .lyrics-preview {
       margin-top: 8px; background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
-      padding: 8px; max-height: 150px; overflow-y: auto;
+      padding: 8px; max-height: 140px; overflow-y: auto;
     }
     .sentence-item { display: flex; align-items: center; margin-bottom: 4px; }
     .sentence-btn {
-      background: #8b5cf6; color: white; border: none; padding: 2px 8px;
-      border-radius: 4px; font-size: 10px; cursor: pointer; margin-right: 6px; flex-shrink: 0;
+      background: #8b5cf6; color: white; border: none; padding: 4px 10px;
+      border-radius: 5px; font-size: 11px; cursor: pointer; margin-right: 6px; flex-shrink: 0;
+      min-height: 30px;
     }
     .sentence-text { font-size: 12px; display: flex; flex-wrap: wrap; }
     .sentence-text span { padding: 1px 2px; border-radius: 3px; transition: all 0.2s; }
@@ -175,44 +177,29 @@
     .fullscreen-lyrics span { padding: 4px 8px; border-radius: 8px; transition: all 0.25s; }
     .fullscreen-lyrics span.highlight { background: #fbbf24; color: #000; font-weight: 700; font-size: 1.25em; }
 
-    /* 移动端优化 */
+    /* 移动端专有 */
     @media (max-width: 600px) {
       body { padding: 4px; }
       .container { border-radius: 10px; }
-      header { padding: 10px 10px; }
+      header { padding: 10px; }
       header h1 { font-size: 18px; }
-      header p { font-size: 10px; }
-      .main { padding: 8px; gap: 8px; flex-direction: column; }
-      .left, .right { min-width: 0; width: 100%; }
+      .main { flex-direction: column; padding: 6px; gap: 6px; }
+      .left, .right { width: 100%; min-width: 0; }
       h2 { font-size: 12px; }
       textarea { height: 80px; font-size: 13px; padding: 8px; }
-      button { padding: 7px 10px; font-size: 11px; min-height: 32px; }
-      button.big { font-size: 13px; padding: 10px 16px; }
+      button { padding: 9px 12px; font-size: 12px; min-height: 40px; }
+      button.big { font-size: 14px; padding: 12px 18px; }
       .controls { gap: 3px; }
-      .controls select { font-size: 10px; padding: 4px 6px; max-width: 100px; }
-      .controls input[type="range"] { width: 55px; }
+      .controls select { font-size: 11px; padding: 5px 8px; min-height: 34px; }
+      .controls input[type="range"] { width: 60px; }
       .panel { padding: 8px 10px; margin: 4px 6px; }
-      .inst-checkbox { font-size: 9px; padding: 3px 6px; }
+      .inst-btn { font-size: 10px; padding: 7px 10px; min-height: 34px; }
       .lyrics-preview { max-height: 100px; }
       .fullscreen-lyrics { font-size: 18px; }
-      .canvas-scroll { border-radius: 8px; }
-    }
-    @media (min-width: 601px) and (max-width: 900px) {
-      .main { flex-direction: column; }
-      .left, .right { width: 100%; }
     }
   </style>
 </head>
 <body>
-  <div class="floating-note" style="left:3%; animation-delay:0s;">🎵</div>
-  <div class="floating-note" style="left:12%; animation-delay:2s;">🎶</div>
-  <div class="floating-note" style="left:25%; animation-delay:4s;">🎵</div>
-  <div class="floating-note" style="left:38%; animation-delay:1s;">🎶</div>
-  <div class="floating-note" style="left:50%; animation-delay:3s;">🎵</div>
-  <div class="floating-note" style="left:65%; animation-delay:5s;">🎶</div>
-  <div class="floating-note" style="left:78%; animation-delay:2.5s;">🎵</div>
-  <div class="floating-note" style="left:90%; animation-delay:4.5s;">🎶</div>
-
   <div class="container">
     <header>
       <h1>🎵 音你而创 · MusiYou</h1>
@@ -232,7 +219,7 @@
       <div class="right">
         <h2>2. 调旋律 <span class="badge">自动防跑调</span> <span class="badge">画布可滑动</span></h2>
         <div class="canvas-scroll">
-          <canvas id="editor" height="320"></canvas>
+          <canvas id="editor" height="300"></canvas>
         </div>
         <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
         <div class="controls">
@@ -268,8 +255,8 @@
         <input type="range" id="accompVolume" min="0" max="1" step="0.05" value="0.3">
         <span id="accompVolumeValue" style="font-size:10px;">0.3</span>
       </div>
-      <h2 style="margin-top:8px;">🎸 伴奏乐器（可多选）</h2>
-      <div class="instrument-checkboxes" id="accompInstruments"></div>
+      <h2 style="margin-top:8px;">🎸 伴奏乐器（点击多选）</h2>
+      <div class="instrument-buttons" id="accompInstruments"></div>
       <div class="controls" style="margin-top:6px;">
         <label>👤 演唱声音：</label>
         <select id="vocalSource">
@@ -371,17 +358,17 @@
     let autoTunedBuffer = null;
     let autoChords = [];
     let activeSources = [];
-    let selectedAccompInstruments = ['guitar']; // 默认选中吉他
+    let selectedAccompInstruments = ['guitar'];
 
     const canvas = document.getElementById('editor');
     const ctx = canvas.getContext('2d');
     const NOTE_H = 22;
     const NOTE_GAP = 2;
-    const DUR_PX = 70; // 移动端更紧凑
-    const TOP_PAD = 26;
-    const LEFT_PAD = 40;
-    const BOT_PAD = 14;
-    const MIN_CANVAS_WIDTH = 600; // 最小画布宽度
+    const DUR_PX = 60;  // 更紧凑，适应手机
+    const TOP_PAD = 24;
+    const LEFT_PAD = 36;
+    const BOT_PAD = 12;
+    const MIN_CANVAS_WIDTH = 500;
 
     // ==================== 工具函数 ====================
     function midiToFreq(m) { return 440 * Math.pow(2, (m-69)/12); }
@@ -390,7 +377,7 @@
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
     function resizeCanvas() {
-      const neededWidth = notes.length > 0 ? totalWidth() + 80 : MIN_CANVAS_WIDTH;
+      const neededWidth = notes.length > 0 ? totalWidth() + 60 : MIN_CANVAS_WIDTH;
       canvas.width = Math.max(MIN_CANVAS_WIDTH, Math.ceil(neededWidth));
       draw();
     }
@@ -441,31 +428,32 @@
       return -1;
     }
 
-    // ==================== 多选伴奏乐器 ====================
-    function renderInstrumentCheckboxes() {
+    // ==================== 多选乐器按钮 ====================
+    function renderInstrumentButtons() {
       const container = document.getElementById('accompInstruments');
       container.innerHTML = '';
       INSTRUMENT_KEYS.forEach(key => {
-        const label = document.createElement('label');
-        label.className = 'inst-checkbox';
-        if (selectedAccompInstruments.includes(key)) label.classList.add('checked');
-        label.innerHTML = `<input type="checkbox" value="${key}" ${selectedAccompInstruments.includes(key) ? 'checked' : ''}> ${INSTRUMENTS[key].name}`;
-        label.addEventListener('click', () => {
+        const btn = document.createElement('div');
+        btn.className = 'inst-btn';
+        if (selectedAccompInstruments.includes(key)) btn.classList.add('active');
+        btn.textContent = INSTRUMENTS[key].name;
+        btn.dataset.key = key;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
           const idx = selectedAccompInstruments.indexOf(key);
           if (idx >= 0) {
             if (selectedAccompInstruments.length > 1) {
               selectedAccompInstruments.splice(idx, 1);
-              label.classList.remove('checked');
+              btn.classList.remove('active');
             } else {
               alert('请至少选择一种伴奏乐器');
-              return;
             }
           } else {
             selectedAccompInstruments.push(key);
-            label.classList.add('checked');
+            btn.classList.add('active');
           }
         });
-        container.appendChild(label);
+        container.appendChild(btn);
       });
     }
 
@@ -906,7 +894,7 @@
       const totalBeats = notes.reduce((s, n) => s + n.duration, 0);
       const beatsPerBar = 4;
       const totalBars = Math.max(1, Math.ceil(totalBeats / beatsPerBar));
-      const perInstVol = accompVol / Math.max(1, accompInsts.length) * 0.5; // 多乐器时降低每个乐器音量
+      const perInstVol = accompVol / Math.max(1, accompInsts.length) * 0.5;
       let barStart = startTime;
       for (let bar = 0; bar < totalBars; bar++) {
         const chordName = autoChords[bar % autoChords.length] || 'C';
@@ -930,7 +918,6 @@
             }
             let volScale = 1;
             if (styleCfg.pattern === 'accent' && beat % 2 === 1) volScale = 0.3;
-            // 为每个选中的伴奏乐器创建声音
             accompInsts.forEach(instKey => {
               midiNotes.forEach(m => {
                 const output = createInstrumentSound(audioCtx, instKey, midiToFreq(m), dur, subTime, perInstVol * volScale);
@@ -974,7 +961,6 @@
         });
       }
 
-      // 高亮
       const totalDur = totalBeats * beatDur;
       const hlInt = setInterval(() => {
         if (token !== playToken) { clearInterval(hlInt); return; }
@@ -1174,6 +1160,10 @@
       isDragging = false; isResizing = false; resizeNoteIndex = -1;
       canvas.style.cursor = 'crosshair';
     });
+    canvas.addEventListener('pointercancel', () => {
+      isDragging = false; isResizing = false; resizeNoteIndex = -1;
+      canvas.style.cursor = 'crosshair';
+    });
     canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     canvas.addEventListener('dblclick', (e) => {
       const idx = findNoteAt(getPointerPos(e).x, getPointerPos(e).y);
@@ -1304,7 +1294,7 @@
         if (data.melodyInstrument) document.getElementById('melodyInstrument').value = data.melodyInstrument;
         if (data.accompInstruments) {
           selectedAccompInstruments = data.accompInstruments;
-          renderInstrumentCheckboxes();
+          renderInstrumentButtons();
         }
         if (data.accompStyle) document.getElementById('accompStyle').value = data.accompStyle;
         if (data.accompVolume !== undefined) {
@@ -1324,7 +1314,7 @@
         document.querySelectorAll('textarea, button, select, input').forEach(el => {
           if (!['playFullBtn', 'closeFullscreen'].includes(el.id)) el.style.display = 'none';
         });
-        document.querySelector('.instrument-checkboxes').style.display = 'none';
+        document.querySelector('.instrument-buttons').style.display = 'none';
         document.querySelector('.help').textContent = '🎵 分享播放模式（只读）';
         playFullSong();
       } catch (e) {
@@ -1356,7 +1346,7 @@
         if (data.melodyInstrument) document.getElementById('melodyInstrument').value = data.melodyInstrument;
         if (data.accompInstruments) {
           selectedAccompInstruments = data.accompInstruments;
-          renderInstrumentCheckboxes();
+          renderInstrumentButtons();
         }
         if (data.accompStyle) document.getElementById('accompStyle').value = data.accompStyle;
         if (data.accompVolume !== undefined) {
@@ -1391,7 +1381,7 @@
     }
 
     populateSelects();
-    renderInstrumentCheckboxes();
+    renderInstrumentButtons();
     document.getElementById('bpmValue').textContent = document.getElementById('bpm').value;
     document.getElementById('accompVolumeValue').textContent = document.getElementById('accompVolume').value;
     loadDraft();
